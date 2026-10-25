@@ -172,7 +172,7 @@ struct LanguageRow: View {
                                     .font(.caption)
                                     .fontWeight(.semibold)
                             }
-                            .buttonStyle(.bordered)
+                            .liquidGlassStandardButtonStyle()
                             
                             Button(action: onDelete) {
                                 Image(systemName: "trash.fill")
@@ -186,10 +186,14 @@ struct LanguageRow: View {
                             .font(.caption)
                             .fontWeight(.semibold)
                     }
-                    .buttonStyle(.bordered)
+                    .liquidGlassStandardButtonStyle()
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .liquidGlassSurface(cornerRadius: 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }

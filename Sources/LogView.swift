@@ -51,6 +51,10 @@ struct LogView: View {
                     .textSelection(.enabled)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .liquidGlassSurface(cornerRadius: 16)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
 
                 Spacer().id(0)
             }

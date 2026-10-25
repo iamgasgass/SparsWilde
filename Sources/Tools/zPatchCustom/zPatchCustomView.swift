@@ -69,8 +69,13 @@ struct zPatchCustomView: View {
                     .lineLimit(1)
             }
             
-            Spacer()
+            Spacer(minLength: 8)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .liquidGlassSurface(cornerRadius: 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
         .contextMenu {
             Button {
                 editPatch(patch)

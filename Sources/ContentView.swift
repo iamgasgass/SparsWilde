@@ -545,7 +545,13 @@ struct ContentView: View {
                         .font(.caption)
                 }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 
     // MARK: - Logic Functions

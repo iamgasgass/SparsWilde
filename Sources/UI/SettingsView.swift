@@ -380,9 +380,11 @@ struct SettingsView: View {
     private var colorSection: some View {
         Section(header: Text(L("settings_accent_color"))) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(tintOptions, id: \.hex) { option in
-                        colorOptionView(option: option)
+                AdaptiveLiquidGlassContainer(spacing: 12) {
+                    HStack(spacing: 12) {
+                        ForEach(tintOptions, id: \.hex) { option in
+                            colorOptionView(option: option)
+                        }
                     }
                 }
                 .padding(.vertical, 8)
@@ -414,10 +416,11 @@ struct SettingsView: View {
         }
         .frame(width: 60)
         .padding(.vertical, 4)
-        .background(
+        .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(isSelected ? color.opacity(0.15) : Color.clear)
-        )
+                .strokeBorder(isSelected ? color.opacity(0.9) : Color.primary.opacity(0.08), lineWidth: isSelected ? 1.5 : 0.75)
+        }
+        .liquidGlassSurface(cornerRadius: 10, interactive: true)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 userTintColorHex = option.hex
@@ -527,12 +530,11 @@ struct AboutView: View {
                     Text(L("settings_donate"))
                         .font(.headline.bold())
                         .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(AppTheme.accent)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(minHeight: 50)
+                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
                 }
-                .buttonStyle(.plain)
+                .liquidGlassButtonStyle(prominent: true)
+                .tint(AppTheme.accent)
             }
             .padding(.vertical, 8)
         }
@@ -600,7 +602,11 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .liquidGlassSurface(cornerRadius: 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 
@@ -625,7 +631,11 @@ struct ThanksRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .liquidGlassSurface(cornerRadius: 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 
@@ -692,11 +702,10 @@ struct TutorialView: View {
                             }
                             .font(.subheadline.weight(.medium))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.secondary.opacity(0.12))
-                            .foregroundStyle(.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .frame(minHeight: 50)
+                            .liquidGlassButtonLabel(cornerRadius: 14)
                         }
+                        .liquidGlassButtonStyle()
                     }
                     
                     Button {
@@ -716,11 +725,11 @@ struct TutorialView: View {
                         }
                         .font(.headline.weight(.bold))
                         .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(minHeight: 50)
+                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
                     }
+                    .liquidGlassButtonStyle(prominent: true)
+                    .tint(AppTheme.accent)
                 }
                 .padding(.horizontal)
             }
@@ -746,6 +755,7 @@ struct TutorialView: View {
                     .font(.system(size: 48, weight: .medium))
                     .foregroundStyle(Color.accentColor)
             }
+            .liquidGlassSurface(cornerRadius: 60)
             .transition(.scale.combined(with: .opacity))
             
             // Step badge
@@ -755,7 +765,7 @@ struct TutorialView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 4)
-                .background(Color.accentColor, in: Capsule())
+                .liquidGlassSurface(cornerRadius: 999)
             
             // Title
             Text(step.title)
@@ -792,6 +802,7 @@ struct TutorialView: View {
                     .font(.system(size: 48, weight: .medium))
                     .foregroundStyle(.green)
             }
+            .liquidGlassSurface(cornerRadius: 60)
             
             Text(L("tutorial_copy_paths"))
                 .font(.title2)
@@ -867,8 +878,7 @@ struct TutorialView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
         .buttonStyle(.plain)
     }

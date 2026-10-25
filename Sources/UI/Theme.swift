@@ -72,12 +72,11 @@ struct WalletStyleButton: View {
                     .font(.headline.bold())
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(AppTheme.accent)
-            .foregroundColor(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .frame(minHeight: 50)
+            .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
         }
-        .buttonStyle(.plain)
+        .liquidGlassButtonStyle(prominent: true)
+        .tint(AppTheme.accent)
         .opacity(disabled ? 0.55 : 1.0)
         .disabled(disabled)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -98,12 +97,10 @@ struct SecondaryActionButton: View {
             Text(title)
                 .font(.headline.bold())
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color(.quaternarySystemFill))
-                .foregroundColor(.primary)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .frame(minHeight: 50)
+                .liquidGlassButtonLabel(cornerRadius: 14)
         }
-        .buttonStyle(.plain)
+        .liquidGlassButtonStyle()
         .opacity(disabled ? 0.35 : 1.0)
         .disabled(disabled)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -159,10 +156,16 @@ struct CardRow: View {
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if let trailing { trailing }
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .liquidGlassSurface(cornerRadius: 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 

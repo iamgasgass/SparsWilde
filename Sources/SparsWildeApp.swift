@@ -68,8 +68,10 @@ struct SparsWildeApp: App {
         WindowGroup {
             if Utils.isIOSVersionSupported() {
                 MainViewWithNavigation()
+                    .liquidGlassAppStyle()
             } else {
                 UnsupportedVersionView()
+                    .liquidGlassAppStyle()
             }
         }
     }

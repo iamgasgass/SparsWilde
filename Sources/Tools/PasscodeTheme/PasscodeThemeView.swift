@@ -131,6 +131,10 @@ struct ThemeRowView: View {
                     themeStore.selectTheme(theme)
                 }
         }
+        .padding(10)
+        .liquidGlassSurface(cornerRadius: 14, interactive: true)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 

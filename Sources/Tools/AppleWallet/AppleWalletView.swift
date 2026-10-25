@@ -131,6 +131,11 @@ struct WalletCardPreview: View {
             .padding(16)
         }
         .frame(height: 200)
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.28), lineWidth: 0.8)
+                .allowsHitTesting(false)
+        }
         .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
         .offset(y: CGFloat(index) * -8)
         .contextMenu {
@@ -689,7 +694,10 @@ struct ImagePickerButton: View {
                     .foregroundStyle(.secondary)
                     .font(.system(size: 20))
             }
+            .padding(12)
+            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
+        .buttonStyle(.plain)
     }
 }
 

@@ -139,7 +139,11 @@ struct RepositoryRowView: View {
                     }
                 }
             }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
+        .buttonStyle(.plain)
         .task {
             await fetchThemeCount()
         }
@@ -228,7 +232,6 @@ struct ThemesListView: View {
                 .padding(.vertical, 12)
             }
         }
-        .background(Color(.systemGroupedBackground))
         .navigationTitle(repository.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -320,19 +323,18 @@ struct RemoteThemeCardView: View {
                             .font(.caption2.weight(.semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 32)
-                    .background(AppTheme.accent)
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .frame(minHeight: 32)
+                    .liquidGlassButtonLabel(prominent: true, cornerRadius: 8)
                 }
-                .buttonStyle(.plain)
+                .liquidGlassButtonStyle(prominent: true)
+                .tint(AppTheme.accent)
+                .controlSize(.small)
                 .disabled(isDownloading)
                 .opacity(isDownloading ? 0.55 : 1.0)
             }
         }
         .padding(10)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(14)
+        .liquidGlassSurface(cornerRadius: 14)
         .task {
             await loadPreviewImage()
         }
