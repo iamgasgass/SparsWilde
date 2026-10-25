@@ -16,9 +16,8 @@ concurrency:
 
 jobs:
   build:
-    # macos-26 provides Xcode 26+ and an iOS 26 SDK for native Liquid Glass APIs.
-    # Runtime/compiler guards in LiquidGlassUI.swift preserve iOS 18+ fallbacks.
-    runs-on: macos-26
+    # GitHub-hosted Xcode 27 image provides the newest iOS SDK line available for this build.
+    runs-on: xcode-27
 
     env:
       SCHEME: SparsWilde
@@ -31,30 +30,61 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select and verify Xcode 26+
+      - name: Select newest installed Xcode and iOS SDK
         shell: bash
         run: |
           set -euo pipefail
 
+          # Evaluate every installed Xcode rather than relying on lexical path order.
+          # The newest SDK is selected, including a newer release-candidate SDK if it
+          # is the newest SDK actually available on the GitHub-hosted runner.
+          version_gt() {
+            awk -v first="$1" -v second="$2" '
+              function compare(v1, v2, a, b, n1, n2, n, i, x, y) {
+                n1 = split(v1, a, "[.]")
+                n2 = split(v2, b, "[.]")
+                n = (n1 > n2 ? n1 : n2)
+                for (i = 1; i <= n; i++) {
+                  x = (i <= n1 ? a[i] : 0) + 0
+                  y = (i <= n2 ? b[i] : 0) + 0
+                  if (x > y) return 1
+                  if (x < y) return -1
+                }
+                return 0
+              }
+              BEGIN { exit(compare(first, second) > 0 ? 0 : 1) }
+            '
+          }
+
           SELECTED_XCODE=""
-          SELECTED_VERSION=""
+          SELECTED_XCODE_VERSION=""
+          SELECTED_SDK_VERSION=""
+
           while IFS= read -r candidate; do
             [ -n "$candidate" ] || continue
             candidate_developer_dir="$candidate/Contents/Developer"
             [ -d "$candidate_developer_dir" ] || continue
 
-            version="$(DEVELOPER_DIR="$candidate_developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode / { print $2; exit }' || true)"
-            major="${version%%.*}"
-            if [[ "$major" =~ ^[0-9]+$ ]] && [ "$major" -ge 26 ]; then
+            xcode_version="$(DEVELOPER_DIR="$candidate_developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode / { print $2; exit }' || true)"
+            sdk_version="$(DEVELOPER_DIR="$candidate_developer_dir" xcrun --sdk iphoneos --show-sdk-version 2>/dev/null || true)"
+            [[ "$sdk_version" =~ ^[0-9]+(\.[0-9]+)*$ ]] || continue
+
+            if [ -z "$SELECTED_SDK_VERSION" ] || version_gt "$sdk_version" "$SELECTED_SDK_VERSION"; then
               SELECTED_XCODE="$candidate"
-              SELECTED_VERSION="$version"
-              break
+              SELECTED_XCODE_VERSION="$xcode_version"
+              SELECTED_SDK_VERSION="$sdk_version"
             fi
           done < <(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort)
 
           if [ -z "$SELECTED_XCODE" ]; then
-            echo "::error::SparsWilde uses native iOS 26 Liquid Glass APIs and requires Xcode 26 or later. Install/select Xcode 26+ on this runner."
-            find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V || true
+            echo "::error::No usable Xcode with an iOS SDK was found on the xcode-27 runner."
+            find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort || true
+            exit 1
+          fi
+
+          SDK_MAJOR="${SELECTED_SDK_VERSION%%.*}"
+          if [[ ! "$SDK_MAJOR" =~ ^[0-9]+$ ]] || [ "$SDK_MAJOR" -lt 27 ]; then
+            echo "::error::SparsWilde requires the latest iOS 27 SDK line for native Liquid Glass. Highest available SDK: $SELECTED_SDK_VERSION"
             exit 1
           fi
 
@@ -62,15 +92,10 @@ jobs:
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
           export DEVELOPER_DIR
 
-          echo "Selected Xcode $SELECTED_VERSION at $SELECTED_XCODE"
+          echo "Selected Xcode $SELECTED_XCODE_VERSION at $SELECTED_XCODE"
           xcodebuild -version
-          SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
-          echo "iOS SDK: $SDK_VERSION"
-          SDK_MAJOR="${SDK_VERSION%%.*}"
-          if [[ ! "$SDK_MAJOR" =~ ^[0-9]+$ ]] || [ "$SDK_MAJOR" -lt 26 ]; then
-            echo "::error::iOS 26 SDK or later is required for native Liquid Glass. Found SDK $SDK_VERSION"
-            exit 1
-          fi
+          echo "Selected iOS SDK: $(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "Swift compiler: $(swift --version | head -n 1)"
 
       - name: Locate Xcode project
         shell: bash
@@ -111,6 +136,19 @@ jobs:
             -resolvePackageDependencies \
             -project "$PROJECT" \
             -scheme "$SCHEME"
+
+          DEPLOYMENT_TARGET="$(xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -sdk iphoneos \
+            -showBuildSettings 2>/dev/null | \
+            awk '$1 == "IPHONEOS_DEPLOYMENT_TARGET" && $2 == "=" { print $3; exit }')"
+          if [ -z "$DEPLOYMENT_TARGET" ]; then
+            echo "::error::Unable to read the app's effective iOS deployment target"
+            exit 1
+          fi
+          echo "Effective app deployment target: iOS $DEPLOYMENT_TARGET (project setting preserved)"
 
           test -f "$PROJECT_DIR/Sources/Assets.xcassets/AppIcon.appiconset/Contents.json" || {
             echo "::error::SparsWilde AppIcon asset catalog not found"
