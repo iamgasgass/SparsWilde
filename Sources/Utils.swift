@@ -1,6 +1,6 @@
 //
 //  Utils.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 
 import Foundation

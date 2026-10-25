@@ -11,7 +11,7 @@ extension Color {
         self.init(.sRGB, red: r, green: g, blue: b, opacity: alpha)
     }
     
-    /// Initialize Color from a hex string like "#007AFF" or "007AFF"
+    /// Initialize Color from a hex string like "#ef9f76" or "ef9f76"
     init(hex string: String) {
         let hex = string.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
@@ -23,7 +23,7 @@ extension Color {
             g = Double((int >> 8) & 0xFF) / 255.0
             b = Double(int & 0xFF) / 255.0
         default:
-            // Fallback to default blue color (#007AFF)
+            // Fallback to default peach color (#ef9f76)
             r = 0xef / 255.0; g = 0x9f / 255.0; b = 0x76 / 255.0
         }
         self.init(.sRGB, red: r, green: g, blue: b, opacity: 1.0)
@@ -43,7 +43,7 @@ struct AppTheme {
     
     /// Dynamic accent color from user preference
     static var accent: Color {
-        let hex = UserDefaults.standard.string(forKey: "SparsWilde.userTintColor") ?? "#007AFF"
+        let hex = UserDefaults.standard.string(forKey: "GassSparsWilde.userTintColor") ?? "#ef9f76"
         return Color(hex: hex)
     }
     
@@ -115,7 +115,7 @@ struct SecondaryActionButton: View {
 // MARK: - App Title Header (not used in Feather-style, kept for compatibility)
 
 struct AppTitleHeader: View {
-    private let title = "SparsWilde"
+    private let title = "Gass SparsWilde"
     private let subtitle = "itunesstored & bookassetd sbx escape"
 
     var body: some View {

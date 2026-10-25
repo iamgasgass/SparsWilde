@@ -1,6 +1,6 @@
 //
 //  LanguageFileUtility.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 
 import Foundation

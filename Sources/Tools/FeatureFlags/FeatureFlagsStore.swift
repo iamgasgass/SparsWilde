@@ -1,6 +1,6 @@
 //
 //  FeatureFlagsStore.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 //  Store for managing Feature Flags state
 //

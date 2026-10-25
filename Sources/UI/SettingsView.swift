@@ -7,7 +7,7 @@ struct SettingsView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @ObservedObject private var languageManager = LanguageManager.shared
     @AppStorage("PairingFile") private var pairingFile: String?
-    @AppStorage("SparsWilde.userTintColor") private var userTintColorHex: String = "#007AFF"
+    @AppStorage("GassSparsWilde.userTintColor") private var userTintColorHex: String = "#ef9f76"
     @State private var showPairingFileImporter = false
     @State private var showDDIDownloadConfirm = false
     @State private var isDDIDownloading = false
@@ -25,7 +25,7 @@ struct SettingsView: View {
         ("Mauve", "#ca9ee6"),
         ("Red", "#e78284"),
         ("Green", "#a6d189"),
-        ("Blue", "#007AFF"),
+        ("Blue", "#8caaee"),
     ]
 
     @State private var copiedPath: String?
@@ -442,7 +442,7 @@ struct SettingsView: View {
     private var appInfoSection: some View {
         Section(header: Text(L("settings_app_info"))) {
             HStack {
-                Label("SparsWilde", systemImage: "sparkles")
+                Label("Gass SparsWilde", systemImage: "sparkles")
                 Spacer()
                 Text("v\(appVersion)")
                     .font(.footnote)
@@ -509,7 +509,7 @@ struct AboutView: View {
                     .foregroundStyle(.pink)
                     .frame(maxWidth: .infinity)
 
-                Text("Thank you for using SparsWilde! This is a passion project dedicated to providing the best experience for you. Your support is my biggest motivation to keep improving it every day.")
+                Text("Thank you for using Gass SparsWilde! This is a passion project dedicated to providing the best experience for you. Your support is my biggest motivation to keep improving it every day.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

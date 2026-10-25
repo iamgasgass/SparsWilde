@@ -1,6 +1,6 @@
 //
 //  PairingFileParser.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 
 import Foundation

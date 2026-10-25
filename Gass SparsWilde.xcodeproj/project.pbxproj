@@ -1,0 +1,577 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E14762372DF1368000FC89FB /* eligibility.plist in Resources */ = {isa = PBXBuildFile; fileRef = E14762322DF1368000FC89FB /* eligibility.plist */; };
+		E14762382DF1368000FC89FB /* FeatureFlags_Global.plist in Resources */ = {isa = PBXBuildFile; fileRef = E14762332DF1368000FC89FB /* FeatureFlags_Global.plist */; };
+		E147623A2DF1368E00FC89FB /* FindCacheDataOffset.m in Sources */ = {isa = PBXBuildFile; fileRef = E14762392DF1368E00FC89FB /* FindCacheDataOffset.m */; };
+		E14762632DF138AB00FC89FB /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = E14762622DF138AB00FC89FB /* NIOCore */; };
+		E14762652DF138AB00FC89FB /* NIOFoundationCompat in Frameworks */ = {isa = PBXBuildFile; productRef = E14762642DF138AB00FC89FB /* NIOFoundationCompat */; };
+		E14762672DF138AB00FC89FB /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = E14762662DF138AB00FC89FB /* NIOPosix */; };
+		E15588802ECF1AF300D0BF93 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = E155887F2ECF1AF300D0BF93 /* NIO */; };
+		E15588822ECF1AF300D0BF93 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = E15588812ECF1AF300D0BF93 /* NIOHTTP1 */; };
+		E15588882ECF25A000D0BF93 /* FlyingFox in Frameworks */ = {isa = PBXBuildFile; productRef = E15588872ECF25A000D0BF93 /* FlyingFox */; };
+		ED175A7A2F1FE58300826ADA /* en.json in Resources */ = {isa = PBXBuildFile; fileRef = ED175A792F1FE58300826ADA /* en.json */; };
+		EDDCFB6E2EFEC82A009BC2BC /* StopDisclosure.caf in Resources */ = {isa = PBXBuildFile; fileRef = EDDCFB6D2EFEC82A009BC2BC /* StopDisclosure.caf */; };
+		EDDCFB6F2EFEC82A009BC2BC /* StartDisclosureWithTone.m4a in Resources */ = {isa = PBXBuildFile; fileRef = EDDCFB6C2EFEC82A009BC2BC /* StartDisclosureWithTone.m4a */; };
+		EDFB12FD2F13DE4A00309613 /* Preview in Resources */ = {isa = PBXBuildFile; fileRef = EDFB12FC2F13DE4A00309613 /* Preview */; };
+		EDFB12FE2F13DE4A00309613 /* FrontFace in Resources */ = {isa = PBXBuildFile; fileRef = EDFB12FA2F13DE4A00309613 /* FrontFace */; };
+		EDFB12FF2F13DE4A00309613 /* PlaceHolder in Resources */ = {isa = PBXBuildFile; fileRef = EDFB12FB2F13DE4A00309613 /* PlaceHolder */; };
+		EDFB13102F13FBC900309613 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = EDFB130F2F13FBC900309613 /* ZIPFoundation */; };
+		EDFB13182F148F1400309613 /* BLDatabaseManager.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EDFB13142F148F1400309613 /* BLDatabaseManager.sqlite */; };
+		EDFB13192F148F1400309613 /* BLDatabaseManager.sqlite-wal in Resources */ = {isa = PBXBuildFile; fileRef = EDFB13162F148F1400309613 /* BLDatabaseManager.sqlite-wal */; };
+		EDFB131A2F148F1400309613 /* BLDatabaseManager.sqlite-shm in Resources */ = {isa = PBXBuildFile; fileRef = EDFB13152F148F1400309613 /* BLDatabaseManager.sqlite-shm */; };
+		EDFB131B2F148F1400309613 /* downloads.28.sqlitedb in Resources */ = {isa = PBXBuildFile; fileRef = EDFB13172F148F1400309613 /* downloads.28.sqlitedb */; };
+		EDFB131D2F148F2400309613 /* zfileattributes.plist in Resources */ = {isa = PBXBuildFile; fileRef = EDFB131C2F148F2400309613 /* zfileattributes.plist */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E14761ED2DF135F000FC89FB /* Gass SparsWilde.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gass SparsWilde.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E147622F2DF1365A00FC89FB /* empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = empty.swift; sourceTree = "<group>"; };
+		E14762322DF1368000FC89FB /* eligibility.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = eligibility.plist; sourceTree = "<group>"; };
+		E14762332DF1368000FC89FB /* FeatureFlags_Global.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = FeatureFlags_Global.plist; sourceTree = "<group>"; };
+		E14762392DF1368E00FC89FB /* FindCacheDataOffset.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FindCacheDataOffset.m; sourceTree = "<group>"; };
+		E147623B2DF1369300FC89FB /* Gass SparsWilde-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Gass SparsWilde-Bridging-Header.h"; sourceTree = "<group>"; };
+		E147623C2DF1369700FC89FB /* idevicebackup2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = idevicebackup2.c; sourceTree = "<group>"; };
+		E147623E2DF1369900FC89FB /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		E14762402DF1369C00FC89FB /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		E14762692DF13CB700FC89FB /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
+		E147626A2DF13CB700FC89FB /* libem_proxy-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libem_proxy-ios.a"; sourceTree = "<group>"; };
+		E147626B2DF13CB700FC89FB /* libimobiledevice-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libimobiledevice-1.0.a"; sourceTree = "<group>"; };
+		E147626C2DF13CB700FC89FB /* libimobiledevice-glue-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libimobiledevice-glue-1.0.a"; sourceTree = "<group>"; };
+		E147626D2DF13CB700FC89FB /* libminimuxer-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libminimuxer-ios.a"; sourceTree = "<group>"; };
+		E147626E2DF13CB700FC89FB /* libplist-2.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libplist-2.0.a"; sourceTree = "<group>"; };
+		E147626F2DF13CB700FC89FB /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
+		E14762702DF13CB700FC89FB /* libusbmuxd-2.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libusbmuxd-2.0.a"; sourceTree = "<group>"; };
+		E15588832ECF1BA000D0BF93 /* Gass SparsWilde-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Gass SparsWilde-Info.plist"; sourceTree = "<group>"; };
+		ED175A792F1FE58300826ADA /* en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = en.json; sourceTree = "<group>"; };
+		EDDCFB6C2EFEC82A009BC2BC /* StartDisclosureWithTone.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = StartDisclosureWithTone.m4a; sourceTree = "<group>"; };
+		EDDCFB6D2EFEC82A009BC2BC /* StopDisclosure.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = StopDisclosure.caf; sourceTree = "<group>"; };
+		EDFB12FA2F13DE4A00309613 /* FrontFace */ = {isa = PBXFileReference; lastKnownFileType = text; path = FrontFace; sourceTree = "<group>"; };
+		EDFB12FB2F13DE4A00309613 /* PlaceHolder */ = {isa = PBXFileReference; lastKnownFileType = text; path = PlaceHolder; sourceTree = "<group>"; };
+		EDFB12FC2F13DE4A00309613 /* Preview */ = {isa = PBXFileReference; lastKnownFileType = text; path = Preview; sourceTree = "<group>"; };
+		EDFB13142F148F1400309613 /* BLDatabaseManager.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = BLDatabaseManager.sqlite; sourceTree = "<group>"; };
+		EDFB13152F148F1400309613 /* BLDatabaseManager.sqlite-shm */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BLDatabaseManager.sqlite-shm"; sourceTree = "<group>"; };
+		EDFB13162F148F1400309613 /* BLDatabaseManager.sqlite-wal */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BLDatabaseManager.sqlite-wal"; sourceTree = "<group>"; };
+		EDFB13172F148F1400309613 /* downloads.28.sqlitedb */ = {isa = PBXFileReference; lastKnownFileType = file; path = downloads.28.sqlitedb; sourceTree = "<group>"; };
+		EDFB131C2F148F2400309613 /* zfileattributes.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = zfileattributes.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E1D10D492DF17DD700995A8E /* Exceptions for "Sources" folder in "Gass SparsWilde" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MobileDevice/MobileDevice.swift,
+				SparseRestore/README.txt,
+			);
+			target = E14761EC2DF135F000FC89FB /* Gass SparsWilde */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E14761EF2DF135F000FC89FB /* Sources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E1D10D492DF17DD700995A8E /* Exceptions for "Sources" folder in "Gass SparsWilde" target */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E14761EA2DF135F000FC89FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E14762652DF138AB00FC89FB /* NIOFoundationCompat in Frameworks */,
+				E14762672DF138AB00FC89FB /* NIOPosix in Frameworks */,
+				E14762632DF138AB00FC89FB /* NIOCore in Frameworks */,
+				E15588822ECF1AF300D0BF93 /* NIOHTTP1 in Frameworks */,
+				E15588802ECF1AF300D0BF93 /* NIO in Frameworks */,
+				E15588882ECF25A000D0BF93 /* FlyingFox in Frameworks */,
+				EDFB13102F13FBC900309613 /* ZIPFoundation in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E14761E42DF135F000FC89FB = {
+			isa = PBXGroup;
+			children = (
+				E15588832ECF1BA000D0BF93 /* Gass SparsWilde-Info.plist */,
+				E14761EF2DF135F000FC89FB /* Sources */,
+				E14761EE2DF135F000FC89FB /* Products */,
+				E147622A2DF1364F00FC89FB /* include */,
+				E14762302DF1365A00FC89FB /* lib */,
+				E14762352DF1368000FC89FB /* Resources */,
+				E14762392DF1368E00FC89FB /* FindCacheDataOffset.m */,
+				E147623B2DF1369300FC89FB /* Gass SparsWilde-Bridging-Header.h */,
+				E147623C2DF1369700FC89FB /* idevicebackup2.c */,
+				E147623E2DF1369900FC89FB /* LICENSE */,
+				E14762402DF1369C00FC89FB /* README.md */,
+			);
+			sourceTree = "<group>";
+		};
+		E14761EE2DF135F000FC89FB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E14761ED2DF135F000FC89FB /* Gass SparsWilde.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E147622A2DF1364F00FC89FB /* include */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		E14762302DF1365A00FC89FB /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				E14762692DF13CB700FC89FB /* libcrypto.a */,
+				E147626A2DF13CB700FC89FB /* libem_proxy-ios.a */,
+				E147626B2DF13CB700FC89FB /* libimobiledevice-1.0.a */,
+				E147626C2DF13CB700FC89FB /* libimobiledevice-glue-1.0.a */,
+				E147626D2DF13CB700FC89FB /* libminimuxer-ios.a */,
+				E147626E2DF13CB700FC89FB /* libplist-2.0.a */,
+				E147626F2DF13CB700FC89FB /* libssl.a */,
+				E14762702DF13CB700FC89FB /* libusbmuxd-2.0.a */,
+				E147622F2DF1365A00FC89FB /* empty.swift */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		E14762352DF1368000FC89FB /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				EDDCFB6C2EFEC82A009BC2BC /* StartDisclosureWithTone.m4a */,
+				EDFB12FA2F13DE4A00309613 /* FrontFace */,
+				EDFB12FB2F13DE4A00309613 /* PlaceHolder */,
+				EDFB13142F148F1400309613 /* BLDatabaseManager.sqlite */,
+				EDFB131C2F148F2400309613 /* zfileattributes.plist */,
+				ED175A792F1FE58300826ADA /* en.json */,
+				EDFB13152F148F1400309613 /* BLDatabaseManager.sqlite-shm */,
+				EDFB13162F148F1400309613 /* BLDatabaseManager.sqlite-wal */,
+				EDFB13172F148F1400309613 /* downloads.28.sqlitedb */,
+				EDFB12FC2F13DE4A00309613 /* Preview */,
+				EDDCFB6D2EFEC82A009BC2BC /* StopDisclosure.caf */,
+				E14762322DF1368000FC89FB /* eligibility.plist */,
+				E14762332DF1368000FC89FB /* FeatureFlags_Global.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E14761EC2DF135F000FC89FB /* Gass SparsWilde */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E14761F82DF135F100FC89FB /* Build configuration list for PBXNativeTarget "Gass SparsWilde" */;
+			buildPhases = (
+				E14761E92DF135F000FC89FB /* Sources */,
+				E14761EA2DF135F000FC89FB /* Frameworks */,
+				E14761EB2DF135F000FC89FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E14761EF2DF135F000FC89FB /* Sources */,
+			);
+			name = "Gass SparsWilde";
+			packageProductDependencies = (
+				E14762622DF138AB00FC89FB /* NIOCore */,
+				E14762642DF138AB00FC89FB /* NIOFoundationCompat */,
+				E14762662DF138AB00FC89FB /* NIOPosix */,
+				E155887F2ECF1AF300D0BF93 /* NIO */,
+				E15588812ECF1AF300D0BF93 /* NIOHTTP1 */,
+				E15588872ECF25A000D0BF93 /* FlyingFox */,
+				EDFB130F2F13FBC900309613 /* ZIPFoundation */,
+			);
+			productName = "Gass SparsWilde";
+			productReference = E14761ED2DF135F000FC89FB /* Gass SparsWilde.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E14761E52DF135F000FC89FB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					E14761EC2DF135F000FC89FB = {
+						CreatedOnToolsVersion = 16.4;
+						LastSwiftMigration = 1640;
+					};
+				};
+			};
+			buildConfigurationList = E14761E82DF135F000FC89FB /* Build configuration list for PBXProject "Gass SparsWilde" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E14761E42DF135F000FC89FB;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */,
+				E15588862ECF25A000D0BF93 /* XCRemoteSwiftPackageReference "FlyingFox" */,
+				EDFB130E2F13FBC900309613 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E14761EE2DF135F000FC89FB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E14761EC2DF135F000FC89FB /* Gass SparsWilde */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E14761EB2DF135F000FC89FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDFB12FD2F13DE4A00309613 /* Preview in Resources */,
+				EDFB12FE2F13DE4A00309613 /* FrontFace in Resources */,
+				EDFB13182F148F1400309613 /* BLDatabaseManager.sqlite in Resources */,
+				EDFB13192F148F1400309613 /* BLDatabaseManager.sqlite-wal in Resources */,
+				EDFB131A2F148F1400309613 /* BLDatabaseManager.sqlite-shm in Resources */,
+				EDFB131B2F148F1400309613 /* downloads.28.sqlitedb in Resources */,
+				EDFB12FF2F13DE4A00309613 /* PlaceHolder in Resources */,
+				E14762372DF1368000FC89FB /* eligibility.plist in Resources */,
+				EDDCFB6E2EFEC82A009BC2BC /* StopDisclosure.caf in Resources */,
+				ED175A7A2F1FE58300826ADA /* en.json in Resources */,
+				EDDCFB6F2EFEC82A009BC2BC /* StartDisclosureWithTone.m4a in Resources */,
+				E14762382DF1368000FC89FB /* FeatureFlags_Global.plist in Resources */,
+				EDFB131D2F148F2400309613 /* zfileattributes.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E14761E92DF135F000FC89FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E147623A2DF1368E00FC89FB /* FindCacheDataOffset.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E14761F62DF135F100FC89FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = Z325T66NZ7;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = include;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E14761F72DF135F100FC89FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = Z325T66NZ7;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = include;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E14761F92DF135F100FC89FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 3;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = 7SU5DB6PMD;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gass SparsWilde-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gass SparsWilde";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+					"$(PROJECT_DIR)/Sources/idevice",
+				);
+				MARKETING_VERSION = 3.1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iamgasgass.ssparswilde;
+				PRODUCT_NAME = "Gass SparsWilde";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Gass SparsWilde-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E14761FA2DF135F100FC89FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 3;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = 7SU5DB6PMD;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gass SparsWilde-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gass SparsWilde";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+					"$(PROJECT_DIR)/Sources/idevice",
+				);
+				MARKETING_VERSION = 3.1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iamgasgass.ssparswilde;
+				PRODUCT_NAME = "Gass SparsWilde";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Gass SparsWilde-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E14761E82DF135F000FC89FB /* Build configuration list for PBXProject "Gass SparsWilde" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E14761F62DF135F100FC89FB /* Debug */,
+				E14761F72DF135F100FC89FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E14761F82DF135F100FC89FB /* Build configuration list for PBXNativeTarget "Gass SparsWilde" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E14761F92DF135F100FC89FB /* Debug */,
+				E14761FA2DF135F100FC89FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.83.0;
+			};
+		};
+		E15588862ECF25A000D0BF93 /* XCRemoteSwiftPackageReference "FlyingFox" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swhitty/FlyingFox";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.26.0;
+			};
+		};
+		EDFB130E2F13FBC900309613 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.20;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E14762622DF138AB00FC89FB /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		E14762642DF138AB00FC89FB /* NIOFoundationCompat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOFoundationCompat;
+		};
+		E14762662DF138AB00FC89FB /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
+		};
+		E155887F2ECF1AF300D0BF93 /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		E15588812ECF1AF300D0BF93 /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14762612DF138AB00FC89FB /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		E15588872ECF25A000D0BF93 /* FlyingFox */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E15588862ECF25A000D0BF93 /* XCRemoteSwiftPackageReference "FlyingFox" */;
+			productName = FlyingFox;
+		};
+		EDFB130F2F13FBC900309613 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EDFB130E2F13FBC900309613 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E14761E52DF135F000FC89FB /* Project object */;
+}

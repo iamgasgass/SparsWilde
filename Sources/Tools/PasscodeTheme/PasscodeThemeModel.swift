@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 // MARK: - UTType Extension for .passthm files
 extension UTType {
     static var passthm: UTType {
-        UTType(importedAs: "com.iamgasgass.sparswilde.passthm")
+        UTType(importedAs: "com.iamgasgass.gasssparswilde.passthm")
     }
 }
 

@@ -1,6 +1,6 @@
 //
 //  LocalizationManager.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 
 import Foundation

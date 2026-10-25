@@ -1,6 +1,6 @@
 //
 //  LanguageSettingsView.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 
 import SwiftUI

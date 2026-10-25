@@ -1,6 +1,6 @@
 //
 //  SecureStringTests.swift
-//  SparsWilde
+//  Gass SparsWilde
 //
 //  Unit tests for SecureString obfuscation utility
 //
