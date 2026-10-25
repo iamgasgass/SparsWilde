@@ -1,0 +1,76 @@
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "nativeName": "English",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/en.json",
+      "translator": "YangJiii"
+    },
+    {
+      "code": "zh_CN",
+      "name": "Chinese (Simplified)",
+      "nativeName": "简体中文",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/zh_CN.json",
+      "translator": "Vzero"
+    },
+    {
+      "code": "ru_RU",
+      "name": "Russian",
+      "nativeName": "Русский",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/ru_RU.json",
+      "translator": "🌸Владек"
+    },
+    {
+      "code": "fr_FR",
+      "name": "French",
+      "nativeName": "Français",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/fr_FR.json",
+      "translator": "louloupexe"
+    },
+    {
+      "code": "vi_VN",
+      "name": "Vietnamese",
+      "nativeName": "Tiếng Việt",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/vi_VN.json",
+      "translator": "YangJiii"
+    },
+    {
+      "code": "ja_JP",
+      "name": "Japanese",
+      "nativeName": "日本語",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/ja_JP.json",
+      "translator": "Yuki"
+    },
+    {
+      "code": "es_ES",
+      "name": "Spanish",
+      "nativeName": "Español",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/es_ES.json",
+      "translator": "d0nh3art"
+    },
+    {
+      "code": "ar_SA",
+      "name": "Arabic",
+      "nativeName": "العربية",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/ar_SA.json",
+      "translator": "Muamal Al-Dulaimi"
+    },
+    {
+      "code": "zh_TW",
+      "name": "Chinese (Traditional)",
+      "nativeName": "繁體中文",
+      "version": 1,
+      "downloadURL": "https://raw.githubusercontent.com/YangJiiii/EnsWilde/main/languages/zh_TW.json",
+      "translator": "Toolspeter"
+    }
+  ]
+}
