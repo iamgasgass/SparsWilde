@@ -4,24 +4,29 @@ struct AppItemView: View {
     let appDetails: [String : Any]
     let bundleID: String
     var body: some View {
-        Form {
-            NavigationLink {
-                List {
-                    ForEach(Array(appDetails.keys), id: \.self) { k in
-                        let v = appDetails[k] as? String
-                        VStack(alignment: .leading) {
-                            Text(k)
-                            Text(v ?? "(not a String)")
-                                .font(Font.footnote)
-                                .textSelection(.enabled)
+        GlassForm {
+            GlassSection {
+                NavigationLink {
+                    GlassForm {
+                        GlassSection {
+                            ForEach(Array(appDetails.keys), id: \.self) { k in
+                                let v = appDetails[k] as? String
+                                VStack(alignment: .leading) {
+                                    Text(k)
+                                    Text(v ?? "(not a String)")
+                                        .font(Font.footnote)
+                                        .foregroundStyle(.secondary)
+                                        .textSelection(.enabled)
+                                }
+                            }
                         }
                     }
+                } label: {
+                    Text("View app details")
                 }
-                .liquidGlassScreenStyle()
-            } label: {
-                Text("View app details")
+                .buttonStyle(.glassNavigationRow)
             }
-            Section(header: Text("Arbitrary read exploit")) {
+            GlassSection(header: Text("Arbitrary read exploit")) {
                 if let bundlePath = appDetails["Path"] {
                     Button("Copy app bundle folder") {
                         UIPasteboard.general.string = "file://a\(bundlePath)"
@@ -74,41 +79,46 @@ struct AppListView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(results, id: \.self) { bundleID in
-                let appDetails = apps[bundleID]
-                let appName = (appDetails?["CFBundleName"] as? String) ?? ""
-                let appBundleID = (appDetails?["CFBundleIdentifier"] as? String) ?? ""
-                NavigationLink {
-                    if let details = appDetails {
-                        AppItemView(appDetails: details)
-                    } else {
-                        AppItemView(bundleID: bundleID)
-                    }
-                } label: {
-                    Image(uiImage: appIcons[bundleID] ?? UIImage(systemName: "app")!)
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                        .task(id: bundleID) {
-                            guard appIcons[bundleID] == nil else { return }
-                            await MainActor.run {
-                                appIcons[bundleID] = UIImage(systemName: "app")
-                            }
-                            let icon = await Task.detached(priority: .background) {
-                                try? JITEnableContext.shared.getAppIcon(withBundleId: bundleID)
-                            }.value
-                            await MainActor.run {
-                                if let icon { appIcons[bundleID] = icon }
+        GlassForm {
+            GlassSection {
+                ForEach(results, id: \.self) { bundleID in
+                    let appDetails = apps[bundleID]
+                    let appName = (appDetails?["CFBundleName"] as? String) ?? ""
+                    let appBundleID = (appDetails?["CFBundleIdentifier"] as? String) ?? ""
+                    NavigationLink {
+                        if let details = appDetails {
+                            AppItemView(appDetails: details)
+                        } else {
+                            AppItemView(bundleID: bundleID)
+                        }
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(uiImage: appIcons[bundleID] ?? UIImage(systemName: "app")!)
+                                .resizable()
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .task(id: bundleID) {
+                                    guard appIcons[bundleID] == nil else { return }
+                                    await MainActor.run {
+                                        appIcons[bundleID] = UIImage(systemName: "app")
+                                    }
+                                    let icon = await Task.detached(priority: .background) {
+                                        try? JITEnableContext.shared.getAppIcon(withBundleId: bundleID)
+                                    }.value
+                                    await MainActor.run {
+                                        if let icon { appIcons[bundleID] = icon }
+                                    }
+                                }
+                            VStack(alignment: .leading) {
+                                Text(appName)
+                                Text(appBundleID).font(Font.footnote).foregroundStyle(.secondary)
                             }
                         }
-                    VStack(alignment: .leading) {
-                        Text(appName)
-                        Text(appBundleID).font(Font.footnote)
                     }
+                    .buttonStyle(.glassNavigationRow)
                 }
             }
         }
-        .liquidGlassScreenStyle()
         .onAppear {
             Task {
                 do {

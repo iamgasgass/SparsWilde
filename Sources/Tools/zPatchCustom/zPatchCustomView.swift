@@ -14,12 +14,12 @@ struct zPatchCustomView: View {
     @State private var editingPatch: zPatchItem? = nil
     
     var body: some View {
-        Form {
-            Section(header: Text(L("tool_zpatch_custom"))) {
+        GlassForm {
+            GlassSection(header: Text(L("tool_zpatch_custom"))) {
                 Toggle(L("enable_tweak"), isOn: $enabled)
             }
             
-            Section(header: Text(L("section_patch_list"))) {
+            GlassSection(header: Text(L("section_patch_list"))) {
                 Button("Add New Patch") {
                     showAddSheet = true
                 }
@@ -31,7 +31,7 @@ struct zPatchCustomView: View {
                 }
             }
             
-            Section(header: Text(L("section_info"))) {
+            GlassSection(header: Text(L("section_info"))) {
                 Text("Add custom file patches. Select a source file and specify a destination path. Enable patches you want to apply.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -72,11 +72,7 @@ struct zPatchCustomView: View {
             
             Spacer(minLength: 8)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .liquidGlassSurface(cornerRadius: 14)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
+        .contentShape(Rectangle())
         .contextMenu {
             Button {
                 editPatch(patch)
@@ -94,8 +90,8 @@ struct zPatchCustomView: View {
     
     private var addPatchSheet: some View {
         NavigationStack {
-            Form {
-                Section(header: Text("Source File")) {
+            GlassForm {
+                GlassSection(header: Text("Source File")) {
                     Button {
                         showFileImporter = true
                     } label: {
@@ -108,13 +104,14 @@ struct zPatchCustomView: View {
                     }
                 }
                 
-                Section(header: Text("Destination Path")) {
+                GlassSection(header: Text("Destination Path")) {
                     TextField("e.g., /var/mobile/Media/file.txt", text: $newDestPath)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
+                        .liquidGlassField()
                 }
                 
-                Section(header: Text(L("section_actions"))) {
+                GlassSection(header: Text(L("section_actions"))) {
                     Button(editingPatch != nil ? "Update Patch" : "Save Patch") {
                         savePatch()
                     }

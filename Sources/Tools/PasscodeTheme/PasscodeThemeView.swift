@@ -18,29 +18,29 @@ struct PasscodeThemeView: View {
     }
     
     var body: some View {
-        Form {
-            Section(header: Text(L("passcode_theme_manager"))) {
+        GlassForm {
+            GlassSection(header: Text(L("passcode_theme_manager"))) {
                 Toggle(L("passcode_enable_theme"), isOn: $themeStore.passcodeThemeEnabled)
             }
             
             // Global Settings — applies to all passcode themes
-            Section(header: Text(L("global_settings"))) {
+            GlassSection(header: Text(L("global_settings"))) {
                 // Language / Method
-                Picker(L("passcode_language_method"), selection: $themeStore.globalCustomPrefixRaw) {
+                GlassMenuPicker(L("passcode_language_method"), selection: $themeStore.globalCustomPrefixRaw) {
                     ForEach(PasscodeTheme.PrefixLanguage.allCases, id: \.self) { prefix in
                         Text(prefix.displayName).tag(prefix.rawValue)
                     }
                 }
                 
                 // Telephony Version
-                Picker(L("passcode_telephony_version"), selection: $themeStore.globalTelephonyVersionRaw) {
+                GlassMenuPicker(L("passcode_telephony_version"), selection: $themeStore.globalTelephonyVersionRaw) {
                     ForEach(PasscodeTheme.TelephonyVersion.allCases, id: \.self) { version in
                         Text(version.displayName).tag(version.rawValue)
                     }
                 }
             }
             
-            Section(header: Text(L("section_theme_library"))) {
+            GlassSection(header: Text(L("section_theme_library"))) {
                 if themeStore.themes.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "photo.on.rectangle.angled")
@@ -57,11 +57,12 @@ struct PasscodeThemeView: View {
                         NavigationLink(destination: ThemeDetailView(theme: theme, themeStore: themeStore, viewModel: viewModel)) {
                             ThemeRowView(theme: theme, themeStore: themeStore)
                         }
+                        .buttonStyle(.glassNavigationRow)
                     }
                 }
             }
             
-            Section(header: Text(L("section_import_theme"))) {
+            GlassSection(header: Text(L("section_import_theme"))) {
                 Button(L("passcode_import_file")) {
                     showImportSheet = true
                 }
@@ -102,10 +103,10 @@ struct ThemeRowView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 50, height: 50)
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.3))
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.primary.opacity(0.07))
                     .frame(width: 50, height: 50)
                     .overlay(
                         Image(systemName: "photo")
@@ -132,10 +133,6 @@ struct ThemeRowView: View {
                     themeStore.selectTheme(theme)
                 }
         }
-        .padding(10)
-        .liquidGlassSurface(cornerRadius: 14, interactive: true)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 
@@ -149,16 +146,16 @@ struct ThemeDetailView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        Form {
+        GlassForm {
             // Preview
-            Section(header: Text(L("section_preview"))) {
+            GlassSection(header: Text(L("section_preview"))) {
                 if let previewImage = theme.getPreviewImage() {
                     VStack(spacing: 12) {
                         Image(uiImage: previewImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(height: 120)
-                            .cornerRadius(12)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         
                         Button {
                             showFullPreview = true
@@ -167,19 +164,26 @@ struct ThemeDetailView: View {
                                 Image(systemName: "eye.fill")
                                 Text(L("passcode_view_all_keys"))
                             }
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 6)
+                            .frame(minHeight: 34)
+                            .liquidGlassButtonLabel(cornerRadius: 17)
                         }
+                        .liquidGlassButtonStyle()
                     }
+                    .frame(maxWidth: .infinity)
                 }
             }
             
             // Theme Info
-            Section(header: Text(L("section_theme_settings"))) {
+            GlassSection(header: Text(L("section_theme_settings"))) {
                 // Theme Name
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L("passcode_theme_name"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField(L("passcode_theme_name"), text: $theme.name)
+                        .liquidGlassField()
                         .onChange(of: theme.name) { _ in themeStore.updateTheme(theme) }
                 }
                 
@@ -229,20 +233,25 @@ struct ThemeDetailView: View {
                         theme.isSelected = true
                     } label: {
                         Text(theme.isSelected ? L("passcode_selected") : L("passcode_select"))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(theme.isSelected ? .green : .accentColor)
+                            .padding(.horizontal, 6)
+                            .frame(minHeight: 34)
+                            .liquidGlassButtonLabel(cornerRadius: 17)
                     }
+                    .liquidGlassButtonStyle()
                 }
             }
             
             // Files Info
-            Section(header: Text(L("section_theme_files"))) {
+            GlassSection(header: Text(L("section_theme_files"))) {
                 let imageFiles = theme.getImageFiles()
                 Text("\(imageFiles.count) image file(s) found")
                     .foregroundStyle(.secondary)
             }
             
             // Delete
-            Section(header: Text(L("section_danger_zone"))) {
+            GlassSection(header: Text(L("section_danger_zone"))) {
                 Button(role: .destructive) {
                     showDeleteAlert = true
                 } label: {
@@ -307,27 +316,28 @@ struct ImportThemeSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
+            GlassForm {
                 if let url = selectedFileURL {
-                    Section {
+                    GlassSection {
                         Text(L("file_selected").replacingOccurrences(of: "{name}", with: url.lastPathComponent))
                             .foregroundStyle(.secondary)
                     }
                 }
                 
-                Section(header: Text(L("theme_information"))) {
+                GlassSection(header: Text(L("theme_information"))) {
                     TextField(L("passcode_theme_name"), text: $themeName)
+                        .liquidGlassField()
                         .autocorrectionDisabled()
                 }
                 
-                Section {
+                GlassSection {
                     Button(L("select_file")) {
                         showFilePicker = true
                     }
                 }
                 
                 if isImporting {
-                    Section {
+                    GlassSection {
                         ProgressView(L("importing"))
                     }
                 }
@@ -407,9 +417,9 @@ struct ImportDefaultPasscodeSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
+            GlassForm {
                 if let url = selectedFileURL {
-                    Section {
+                    GlassSection {
                         Text(L("file_selected").replacingOccurrences(of: "{name}", with: url.lastPathComponent))
                             .foregroundStyle(.secondary)
                         if !detectedInfo.isEmpty {
@@ -420,19 +430,20 @@ struct ImportDefaultPasscodeSheet: View {
                     }
                 }
                 
-                Section(header: Text(L("theme_information"))) {
+                GlassSection(header: Text(L("theme_information"))) {
                     TextField(L("passcode_theme_name"), text: $themeName)
+                        .liquidGlassField()
                         .autocorrectionDisabled()
                 }
                 
-                Section {
+                GlassSection {
                     Button(L("passcode_select_zip")) {
                         showFilePicker = true
                     }
                 }
                 
                 if isImporting {
-                    Section {
+                    GlassSection {
                         ProgressView(L("importing"))
                     }
                 }
@@ -555,8 +566,8 @@ struct FullPasscodePreviewSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
+            GlassForm {
+                GlassSection {
                     Text(L("passcode_all_keys_from").replacingOccurrences(of: "{name}", with: theme.name))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -565,7 +576,7 @@ struct FullPasscodePreviewSheet: View {
                 let keyImages = getAllPasscodeKeyImages()
                 
                 if keyImages.isEmpty {
-                    Section {
+                    GlassSection {
                         VStack(spacing: 12) {
                             Image(systemName: "photo.on.rectangle.angled")
                                 .font(.system(size: 48))
@@ -578,7 +589,7 @@ struct FullPasscodePreviewSheet: View {
                         .padding(.vertical, 60)
                     }
                 } else {
-                    Section {
+                    GlassSection {
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: 12),
                             GridItem(.flexible(), spacing: 12),
@@ -594,7 +605,7 @@ struct FullPasscodePreviewSheet: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .frame(maxWidth: 100, maxHeight: 100)
-                                            .cornerRadius(8)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                         
                                         Text(item.label)
                                             .font(.caption2)

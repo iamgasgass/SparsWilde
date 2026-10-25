@@ -49,15 +49,16 @@ struct LogView: View {
                     .font(.system(size: 12).monospaced())
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, LiquidGlassMetrics.rowHorizontalPadding)
+                    .padding(.vertical, 14)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .liquidGlassSurface(cornerRadius: 16)
-                    .padding(.horizontal, 12)
+                    .liquidGlassSurface(cornerRadius: LiquidGlassMetrics.cardCornerRadius)
+                    .padding(.horizontal, LiquidGlassMetrics.screenHorizontalPadding)
                     .padding(.top, 12)
 
                 Spacer().id(0)
             }
+            .liquidGlassBackground()
             .liquidGlassScreenStyle()
             .onAppear {
                 guard !ran else { return }

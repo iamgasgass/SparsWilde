@@ -31,7 +31,7 @@ struct SettingsView: View {
     @State private var copiedPath: String?
     
     var body: some View {
-        Form {
+        GlassForm {
             systemStatusSection
             pairingSection
             ddiSection
@@ -67,7 +67,7 @@ struct SettingsView: View {
     // MARK: - System Status Section
     @ViewBuilder
     private var systemStatusSection: some View {
-        Section(header: Text(L("system_status"))) {
+        GlassSection(header: Text(L("system_status"))) {
             statusRow(
                 title: L("status_pairing_file"),
                 subtitle: pairingFile != nil ? L("status_pairing_loaded") : L("status_pairing_missing"),
@@ -100,7 +100,7 @@ struct SettingsView: View {
     // MARK: - DDI Section
     @ViewBuilder
     private var ddiSection: some View {
-        Section(header: Text(L("ddi_section_title"))) {
+        GlassSection(header: Text(L("ddi_section_title"))) {
             // DDI files status
             statusRow(
                 title: L("status_ddi"),
@@ -271,7 +271,7 @@ struct SettingsView: View {
     // MARK: - Pairing Section
     @ViewBuilder
     private var pairingSection: some View {
-        Section(header: Text(L("status_pairing_file"))) {
+        GlassSection(header: Text(L("status_pairing_file"))) {
             if pairingFile != nil {
                 Button(role: .destructive) {
                     pairingFile = nil
@@ -311,22 +311,24 @@ struct SettingsView: View {
     // MARK: - Language Section
     @ViewBuilder
     private var languageSection: some View {
-        Section(header: Text(L("settings_language"))) {
+        GlassSection(header: Text(L("settings_language"))) {
             NavigationLink(destination: LanguageSettingsView()) {
                 Label(L("settings_language"), systemImage: "globe")
             }
+            .buttonStyle(.glassNavigationRow)
         }
     }
 
     // MARK: - Tutorial Section
     @ViewBuilder
     private var tutorialSection: some View {
-        Section(header: Text(L("settings_tutorial"))) {
+        GlassSection(header: Text(L("settings_tutorial"))) {
             NavigationLink {
                 TutorialView()
             } label: {
                 Label(L("tutorial_guide"), systemImage: "book.fill")
             }
+            .buttonStyle(.glassNavigationRow)
             
             // Copy Passcode Path
             Button {
@@ -379,19 +381,15 @@ struct SettingsView: View {
     // MARK: - Color Section (at bottom)
     @ViewBuilder
     private var colorSection: some View {
-        Section(header: Text(L("settings_accent_color"))) {
+        GlassSection(header: Text(L("settings_accent_color"))) {
             ScrollView(.horizontal, showsIndicators: false) {
-                AdaptiveLiquidGlassContainer(spacing: 12) {
-                    HStack(spacing: 12) {
-                        ForEach(tintOptions, id: \.hex) { option in
-                            colorOptionView(option: option)
-                        }
+                HStack(spacing: 12) {
+                    ForEach(tintOptions, id: \.hex) { option in
+                        colorOptionView(option: option)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
             }
-            .liquidGlassScreenStyle()
-            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         }
     }
 
@@ -417,12 +415,13 @@ struct SettingsView: View {
                 .foregroundStyle(isSelected ? .primary : .secondary)
         }
         .frame(width: 60)
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .liquidGlassInset(cornerRadius: 18)
         .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(isSelected ? color.opacity(0.9) : Color.primary.opacity(0.08), lineWidth: isSelected ? 1.5 : 0.75)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(isSelected ? color.opacity(0.9) : Color.clear, lineWidth: 1.5)
         }
-        .liquidGlassSurface(cornerRadius: 10, interactive: true)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 userTintColorHex = option.hex
@@ -445,7 +444,7 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var appInfoSection: some View {
-        Section(header: Text(L("settings_app_info"))) {
+        GlassSection(header: Text(L("settings_app_info"))) {
             HStack {
                 Label("SparsWilde", systemImage: "sparkles")
                 Spacer()
@@ -489,7 +488,7 @@ struct AboutView: View {
     private let contactURL = URL(string: "https://x.com/duongduong0908")!
 
     var body: some View {
-        Form {
+        GlassForm {
             donateSection
             feedbackSection
             creditsSection
@@ -508,7 +507,7 @@ struct AboutView: View {
     // MARK: - Donate (Feather-style)
     @ViewBuilder
     private var donateSection: some View {
-        Section {
+        GlassSection {
             VStack(spacing: 12) {
                 Image(systemName: "heart.fill")
                     .font(.system(size: 32, weight: .bold))
@@ -534,7 +533,7 @@ struct AboutView: View {
                         .font(.headline.bold())
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 50)
-                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
+                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 25)
                 }
                 .liquidGlassButtonStyle(prominent: true)
                 .tint(AppTheme.accent)
@@ -546,7 +545,7 @@ struct AboutView: View {
     // MARK: - Feedback & Links (Feather-style)
     @ViewBuilder
     private var feedbackSection: some View {
-        Section {
+        GlassSection {
             Button(action: {
                 if let url = URL(string: "https://github.com/YangJiiii/EnsWilde") {
                     UIApplication.shared.open(url)
@@ -563,7 +562,7 @@ struct AboutView: View {
     // MARK: - Credits (Feather-style)
     @ViewBuilder
     private var creditsSection: some View {
-        Section(header: Text(L("settings_thanks_to"))) {
+        GlassSection(header: Text(L("settings_thanks_to"))) {
             creditRow(name: "Carrot1211", desc: "For cheering me on and supporting me during development.")
             creditRow(name: "@khanhduytran0", desc: "is based on SparseBox.")
             creditRow(name: "@SideStore team", desc: "idevice and C bindings from StikDebug.")
@@ -580,7 +579,7 @@ struct AboutView: View {
     // MARK: - Translators (Feather-style)
     @ViewBuilder
     private var translatorsSection: some View {
-        Section(header: Text(L("settings_translators"))) {
+        GlassSection(header: Text(L("settings_translators"))) {
             ForEach(languageManager.availableLanguages.filter { $0.translator != nil && !($0.translator?.isEmpty ?? true) }) { langInfo in
                 creditRow(name: langInfo.translator ?? "", desc: "\(langInfo.nativeName) (\(langInfo.name)) translation")
             }
@@ -605,11 +604,6 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .liquidGlassSurface(cornerRadius: 14)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 
@@ -634,11 +628,6 @@ struct ThanksRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .liquidGlassSurface(cornerRadius: 14)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 
@@ -706,7 +695,7 @@ struct TutorialView: View {
                             .font(.subheadline.weight(.medium))
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 50)
-                            .liquidGlassButtonLabel(cornerRadius: 14)
+                            .liquidGlassButtonLabel(cornerRadius: 25)
                         }
                         .liquidGlassButtonStyle()
                     }
@@ -729,7 +718,7 @@ struct TutorialView: View {
                         .font(.headline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 50)
-                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
+                        .liquidGlassButtonLabel(prominent: true, cornerRadius: 25)
                     }
                     .liquidGlassButtonStyle(prominent: true)
                     .tint(AppTheme.accent)
@@ -738,6 +727,7 @@ struct TutorialView: View {
             }
             .padding(.bottom, 30)
         }
+        .liquidGlassBackground()
         .navigationTitle(L("tutorial_title"))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -879,9 +869,9 @@ struct TutorialView: View {
                     .foregroundStyle(copiedPath == identifier ? .green : .secondary)
                     .animation(.spring(response: 0.3), value: copiedPath)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 18)
             .padding(.vertical, 14)
-            .liquidGlassSurface(cornerRadius: 14, interactive: true)
+            .liquidGlassSurface(cornerRadius: LiquidGlassMetrics.tileCornerRadius, interactive: true)
         }
         .buttonStyle(.plain)
     }

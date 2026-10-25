@@ -20,15 +20,15 @@ struct FeatureFlagsView: View {
     }
     
     var body: some View {
-        Form {
+        GlassForm {
             // Feature Flags Section
-            Section(header: Text(L("ff_section_header"))) {
+            GlassSection(header: Text(L("ff_section_header"))) {
                 Toggle(L("ff_enable"), isOn: $store.featureFlagsEnabled)
             }
 
             // iOS 18.2+ Warning and Folder Creation
             if needsFolderCreation {
-                Section(header: Text(L("ff_ios182_header"))) {
+                GlassSection(header: Text(L("ff_ios182_header"))) {
                     Toggle(isOn: $store.folderCreated) {
                         Text(L("ff_create_folder"))
                     }
@@ -36,7 +36,7 @@ struct FeatureFlagsView: View {
             }
 
             // Liquid Glass Section (all-in-one toggle, no icon)
-            Section(header: Text(L("ff_liquid_glass_header"))) {
+            GlassSection(header: Text(L("ff_liquid_glass_header"))) {
                 Toggle(isOn: Binding(
                     get: { store.areAllLiquidGlassEnabled() },
                     set: { _ in store.toggleAllLiquidGlass() }
@@ -57,7 +57,7 @@ struct FeatureFlagsView: View {
 
             // Reset Button
             if !store.enabledFlags.isEmpty {
-                Section(header: Text(L("section_actions"))) {
+                GlassSection(header: Text(L("section_actions"))) {
                     Button(role: .destructive, action: {
                         store.resetAll()
                     }) {
@@ -97,7 +97,7 @@ struct FeatureFlagsView: View {
             default: return groupName
             }
         }()
-        Section(header: Text(localizedGroupName)) {
+        GlassSection(header: Text(localizedGroupName)) {
             ForEach(flags) { flag in
                 Toggle(isOn: Binding(
                     get: { store.isFlagEnabled(flag.id) },

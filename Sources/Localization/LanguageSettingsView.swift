@@ -14,9 +14,9 @@ struct LanguageSettingsView: View {
     @State private var downloadingLanguage: String?
     
     var body: some View {
-        Form {
+        GlassForm {
             // Current Language
-            Section(header: Text(L("settings_language_current"))) {
+            GlassSection(header: Text(L("settings_language_current"))) {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
@@ -25,7 +25,7 @@ struct LanguageSettingsView: View {
             }
             
             // Refresh
-            Section {
+            GlassSection {
                 Button(action: {
                     Task {
                         await languageManager.fetchAvailableLanguages()
@@ -48,7 +48,7 @@ struct LanguageSettingsView: View {
             
             // Available Languages
             if !languageManager.availableLanguages.isEmpty {
-                Section(header: Text(L("settings_language_available"))) {
+                GlassSection(header: Text(L("settings_language_available"))) {
                     ForEach(languageManager.availableLanguages) { language in
                         LanguageRow(
                             language: language,
@@ -85,7 +85,7 @@ struct LanguageSettingsView: View {
                     }
                 }
             } else if !languageManager.isLoading {
-                Section {
+                GlassSection {
                     VStack(spacing: 12) {
                         Image(systemName: "network.slash")
                             .font(.system(size: 48))
@@ -161,6 +161,7 @@ struct LanguageRow: View {
                             .font(.title2)
                             .foregroundStyle(.orange)
                     }
+                    .buttonStyle(.borderless)
                 } else if isDownloaded {
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
@@ -179,11 +180,14 @@ struct LanguageRow: View {
                                 Image(systemName: "trash.fill")
                                     .foregroundStyle(.red)
                             }
+                            .liquidGlassStandardButtonStyle()
+                            .buttonBorderShape(.circle)
                         }
                     }
                 } else {
                     Button(action: onDownload) {
                         Label(L("settings_language_download"), systemImage: "arrow.down.circle")
+                            .labelStyle(.titleAndIcon)
                             .font(.caption)
                             .fontWeight(.semibold)
                     }
@@ -191,10 +195,5 @@ struct LanguageRow: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .liquidGlassSurface(cornerRadius: 14)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }

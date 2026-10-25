@@ -15,12 +15,12 @@ struct AppleWalletView: View {
     @State private var isScanning = false
     
     var body: some View {
-        Form {
-            Section(header: Text(L("tool_apple_wallet"))) {
+        GlassForm {
+            GlassSection(header: Text(L("tool_apple_wallet"))) {
                 Toggle(L("wallet_enable"), isOn: $walletStore.appleWalletEnabled)
             }
 
-            Section(header: Text(L("section_wallet_cards"))) {
+            GlassSection(header: Text(L("section_wallet_cards"))) {
                 if walletStore.cards.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "creditcard")
@@ -42,7 +42,7 @@ struct AppleWalletView: View {
                 }
             }
 
-            Section(header: Text(L("section_add_card"))) {
+            GlassSection(header: Text(L("section_add_card"))) {
                 Button(L("wallet_scan_card")) {
                     showScanSheet = true
                 }
@@ -94,9 +94,9 @@ struct WalletCardPreview: View {
                     .resizable()
                     .aspectRatio(1.586, contentMode: .fill)
                     .frame(height: 200)
-                    .cornerRadius(16)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             } else {
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [Color(hex: 0x667eea), Color(hex: 0x764ba2)],
@@ -133,7 +133,7 @@ struct WalletCardPreview: View {
         }
         .frame(height: 200)
         .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.28), lineWidth: 0.8)
                 .allowsHitTesting(false)
         }
@@ -175,12 +175,14 @@ struct ManualAddCardSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text(L("section_card_information"))) {
+            GlassForm {
+                GlassSection(header: Text(L("section_card_information"))) {
                     TextField(L("wallet_card_id"), text: $cardID)
+                        .liquidGlassField()
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
                     TextField(L("wallet_card_name"), text: $cardName)
+                        .liquidGlassField()
                 }
             }
             .liquidGlassScreenStyle()
@@ -216,8 +218,8 @@ struct ScanCardIDSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text(L("wallet_scan_card"))) {
+            GlassForm {
+                GlassSection(header: Text(L("wallet_scan_card"))) {
                     VStack(spacing: 20) {
                         // Scanning Animation
                         ZStack {
@@ -267,7 +269,7 @@ struct ScanCardIDSheet: View {
                     .padding(.vertical, 20)
                 }
 
-                Section(header: Text(L("section_actions"))) {
+                GlassSection(header: Text(L("section_actions"))) {
                     if isScanning {
                         Button(L("wallet_scan_cancel")) {
                             stopScanning()
@@ -350,8 +352,8 @@ struct EditCardSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text(L("section_card_information"))) {
+            GlassForm {
+                GlassSection(header: Text(L("section_card_information"))) {
                     // Card ID is read-only
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L("wallet_card_id_readonly"))
@@ -361,6 +363,7 @@ struct EditCardSheet: View {
                             .font(.system(.body, design: .monospaced))
                     }
                     TextField(L("wallet_card_name"), text: $cardName)
+                        .liquidGlassField()
                 }
             }
             .liquidGlassScreenStyle()
@@ -411,17 +414,17 @@ struct AppleWalletCardDetailView: View {
     }
     
     var body: some View {
-        Form {
+        GlassForm {
             // Card Preview
-            Section(header: Text(L("section_card_preview"))) {
+            GlassSection(header: Text(L("section_card_preview"))) {
                 if let imageData = card.backgroundImageData,
                    let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(1.586, contentMode: .fit)
-                        .cornerRadius(12)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 } else {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(
                             LinearGradient(
                                 colors: [Color(hex: 0x667eea), Color(hex: 0x764ba2)],
@@ -438,8 +441,9 @@ struct AppleWalletCardDetailView: View {
             }
 
             // Card Info
-            Section(header: Text(L("section_card_information"))) {
+            GlassSection(header: Text(L("section_card_information"))) {
                 TextField(L("wallet_card_name"), text: $card.name)
+                    .liquidGlassField()
                     .onChange(of: card.name) { _ in walletStore.updateCard(card) }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -455,7 +459,7 @@ struct AppleWalletCardDetailView: View {
             }
 
             // Image Resolution
-            Section(header: Text(L("section_image_resolution"))) {
+            GlassSection(header: Text(L("section_image_resolution"))) {
                 Picker("Resolution", selection: $card.useRetina) {
                     Text(L("wallet_resolution_2x")).tag(false)
                     Text(L("wallet_resolution_3x")).tag(true)
@@ -465,7 +469,7 @@ struct AppleWalletCardDetailView: View {
             }
 
             // Images
-            Section(header: Text(L("section_card_images"))) {
+            GlassSection(header: Text(L("section_card_images"))) {
                 ImagePickerButton(
                     title: "Background Image",
                     subtitle: card.useRetina ? "cardBackgroundCombined@3x.png" : "cardBackgroundCombined@2x.png",
@@ -477,7 +481,7 @@ struct AppleWalletCardDetailView: View {
             }
             
             // Card Display Number Section
-            Section(header: Text(L("wallet_card_display_number"))) {
+            GlassSection(header: Text(L("wallet_card_display_number"))) {
                 if passJSONData != nil {
                     // Show imported status
                     HStack {
@@ -495,6 +499,7 @@ struct AppleWalletCardDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         TextField(L("wallet_display_number_placeholder"), text: $primaryAccountSuffix)
+                            .liquidGlassField()
                             .font(.system(.body, design: .monospaced))
                             .autocorrectionDisabled()
                             .onChange(of: primaryAccountSuffix) { newValue in
@@ -526,7 +531,7 @@ struct AppleWalletCardDetailView: View {
             }
 
             // Delete Card
-            Section(header: Text(L("section_danger_zone"))) {
+            GlassSection(header: Text(L("section_danger_zone"))) {
                 Button(role: .destructive) {
                     showDeleteAlert = true
                 } label: {
@@ -699,10 +704,8 @@ struct ImagePickerButton: View {
                     .foregroundStyle(.secondary)
                     .font(.system(size: 20))
             }
-            .padding(12)
-            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(GlassRowButtonStyle(tinted: false))
     }
 }
 
@@ -868,15 +871,15 @@ struct ImportDefaultCardSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
+            GlassForm {
+                GlassSection {
                     Button(L("wallet_select_zip")) {
                         showFilePicker = true
                     }
                 }
                 
                 if isImporting {
-                    Section {
+                    GlassSection {
                         HStack {
                             ProgressView()
                                 .padding(.trailing, 8)
@@ -886,7 +889,7 @@ struct ImportDefaultCardSheet: View {
                 }
                 
                 if let result = importResult {
-                    Section {
+                    GlassSection {
                         Label(result, systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     }

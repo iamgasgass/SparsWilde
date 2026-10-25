@@ -255,3 +255,385 @@ extension View {
         modifier(AdaptiveLiquidGlassSurface(cornerRadius: cornerRadius, interactive: interactive))
     }
 }
+
+// MARK: - Liquid Glass Layout System
+//
+// Every screen in SparsWilde is composed from the primitives below instead of
+// `Form` / `List`. Grouped table cells cannot carry a single, continuous native
+// glass surface, so each section is rendered as one real Liquid Glass card
+// (`glassEffect` on iOS 26+, material fallback before) floating over the
+// ambient canvas, with the rows laid out and separated inside it.
+
+enum LiquidGlassMetrics {
+    static let cardCornerRadius: CGFloat = 28
+    static let tileCornerRadius: CGFloat = 26
+    static let rowHorizontalPadding: CGFloat = 18
+    static let rowVerticalPadding: CGFloat = 12
+    static let screenHorizontalPadding: CGFloat = 16
+    static let sectionSpacing: CGFloat = 26
+    static let iconBadgeSize: CGFloat = 34
+}
+
+extension View {
+    /// Paints the shared ambient canvas behind a screen so its glass surfaces
+    /// always have depth to refract.
+    func liquidGlassBackground() -> some View {
+        background {
+            LiquidGlassAmbientBackground()
+                .ignoresSafeArea()
+        }
+    }
+
+    /// Subtle inner surface for elements that sit *inside* a glass card
+    /// (icon badges, chips, fields). Glass is never stacked on glass.
+    func liquidGlassInset(cornerRadius: CGFloat = 14) -> some View {
+        modifier(LiquidGlassInset(cornerRadius: cornerRadius))
+    }
+
+    /// Capsule input field matching the Liquid Glass cards.
+    func liquidGlassField() -> some View {
+        modifier(LiquidGlassField())
+    }
+}
+
+struct LiquidGlassInset: ViewModifier {
+    var cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        content
+            .background(Color.primary.opacity(0.07), in: shape)
+            .overlay {
+                shape.strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.75)
+            }
+    }
+}
+
+struct LiquidGlassField: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .textFieldStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(minHeight: 46)
+            .liquidGlassInset(cornerRadius: 23)
+    }
+}
+
+// MARK: - Glass Form (replaces Form / List)
+
+struct GlassForm<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: LiquidGlassMetrics.sectionSpacing) {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, LiquidGlassMetrics.screenHorizontalPadding)
+            .padding(.top, 12)
+            .padding(.bottom, 36)
+        }
+        .liquidGlassBackground()
+        .liquidGlassScreenStyle()
+    }
+}
+
+// MARK: - Glass Section (replaces Section)
+
+struct GlassSection<Header: View, Footer: View, Content: View>: View {
+    private let header: Header
+    private let footer: Footer
+    private let showsHeader: Bool
+    private let showsFooter: Bool
+    private let content: Content
+
+    fileprivate init(header: Header, footer: Footer, showsHeader: Bool, showsFooter: Bool, content: Content) {
+        self.header = header
+        self.footer = footer
+        self.showsHeader = showsHeader
+        self.showsFooter = showsFooter
+        self.content = content
+    }
+
+    init(header: Header, footer: Footer, @ViewBuilder content: () -> Content) {
+        self.init(header: header, footer: footer, showsHeader: true, showsFooter: true, content: content())
+    }
+
+    var body: some View {
+        Group(subviews: content) { rows in
+            if !rows.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    if showsHeader {
+                        header
+                            .modifier(LiquidGlassSectionHeaderStyle())
+                    }
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(rows) { row in
+                            if row.id != rows.first?.id {
+                                LiquidGlassRowDivider()
+                            }
+                            row
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, LiquidGlassMetrics.rowHorizontalPadding)
+                                .padding(.vertical, LiquidGlassMetrics.rowVerticalPadding)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .liquidGlassSurface(cornerRadius: LiquidGlassMetrics.cardCornerRadius)
+
+                    if showsFooter {
+                        footer
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 20)
+                    }
+                }
+                .buttonStyle(GlassRowButtonStyle())
+                .labelStyle(GlassRowLabelStyle())
+            }
+        }
+    }
+}
+
+extension GlassSection where Header == EmptyView, Footer == EmptyView {
+    init(@ViewBuilder content: () -> Content) {
+        self.init(header: EmptyView(), footer: EmptyView(), showsHeader: false, showsFooter: false, content: content())
+    }
+}
+
+extension GlassSection where Footer == EmptyView {
+    init(header: Header, @ViewBuilder content: () -> Content) {
+        self.init(header: header, footer: EmptyView(), showsHeader: true, showsFooter: false, content: content())
+    }
+}
+
+extension GlassSection where Header == Text, Footer == EmptyView {
+    init<S: StringProtocol>(_ title: S, @ViewBuilder content: () -> Content) {
+        self.init(header: Text(title), footer: EmptyView(), showsHeader: true, showsFooter: false, content: content())
+    }
+}
+
+// MARK: - Glass Card Group (each child is its own glass tile)
+
+struct GlassCardGroup<Header: View, Content: View>: View {
+    private let header: Header
+    private let content: Content
+
+    init(header: Header, @ViewBuilder content: () -> Content) {
+        self.header = header
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            header
+                .modifier(LiquidGlassSectionHeaderStyle())
+
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .buttonStyle(GlassCardButtonStyle())
+            .labelStyle(GlassRowLabelStyle())
+        }
+    }
+}
+
+// MARK: - Section header / divider
+
+struct LiquidGlassSectionHeaderStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.caption.weight(.bold))
+            .tracking(1.8)
+            .textCase(.uppercase)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+struct LiquidGlassRowDivider: View {
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.09))
+            .frame(height: 1 / max(displayScale, 1))
+            .padding(.horizontal, LiquidGlassMetrics.rowHorizontalPadding)
+            .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Row button style (buttons & navigation links inside a glass card)
+
+private struct GlassRowDestructiveKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var glassRowDestructive: Bool {
+        get { self[GlassRowDestructiveKey.self] }
+        set { self[GlassRowDestructiveKey.self] = newValue }
+    }
+}
+
+struct GlassRowButtonStyle: ButtonStyle {
+    /// Plain-text actions are tinted (like grouped-list buttons); navigation
+    /// rows keep primary text.
+    var tinted: Bool = true
+    var showsDisclosure: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        LiquidGlassRowButtonBody(
+            configuration: configuration,
+            tinted: tinted,
+            showsDisclosure: showsDisclosure
+        )
+    }
+}
+
+extension ButtonStyle where Self == GlassRowButtonStyle {
+    /// Row inside a glass card that pushes another screen.
+    static var glassNavigationRow: GlassRowButtonStyle {
+        GlassRowButtonStyle(tinted: false, showsDisclosure: true)
+    }
+}
+
+private struct LiquidGlassRowButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let tinted: Bool
+    let showsDisclosure: Bool
+    @Environment(\.isEnabled) private var isEnabled
+
+    private var isDestructive: Bool {
+        configuration.role == .destructive
+    }
+
+    private var foreground: AnyShapeStyle {
+        if isDestructive { return AnyShapeStyle(Color.red) }
+        return tinted ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary)
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            configuration.label
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .foregroundStyle(foreground)
+        .environment(\.glassRowDestructive, isDestructive)
+        .contentShape(Rectangle().inset(by: -LiquidGlassMetrics.rowVerticalPadding))
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.primary.opacity(configuration.isPressed ? 0.09 : 0))
+                .padding(.horizontal, -10)
+                .padding(.vertical, -7)
+        }
+        .opacity(isEnabled ? 1 : 0.4)
+        .animation(.easeOut(duration: 0.18), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Card button style (each control is a full glass tile)
+
+struct GlassCardButtonStyle: ButtonStyle {
+    var cornerRadius: CGFloat = LiquidGlassMetrics.tileCornerRadius
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.primary)
+            .padding(.horizontal, LiquidGlassMetrics.rowHorizontalPadding)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .liquidGlassSurface(cornerRadius: cornerRadius, interactive: true)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1)
+            .animation(.spring(response: 0.32, dampingFraction: 0.72), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Label style (icon in a round inset badge, like the reference cards)
+
+struct GlassRowLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        LiquidGlassRowLabel(configuration: configuration)
+    }
+}
+
+private struct LiquidGlassRowLabel: View {
+    let configuration: LabelStyleConfiguration
+    @Environment(\.glassRowDestructive) private var destructive
+
+    var body: some View {
+        HStack(spacing: 14) {
+            configuration.icon
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(destructive ? AnyShapeStyle(Color.red) : AnyShapeStyle(.tint))
+                .frame(width: LiquidGlassMetrics.iconBadgeSize, height: LiquidGlassMetrics.iconBadgeSize)
+                .liquidGlassInset(cornerRadius: LiquidGlassMetrics.iconBadgeSize / 2)
+
+            configuration.title
+                .multilineTextAlignment(.leading)
+        }
+    }
+}
+
+/// Round inset badge for a bare SF Symbol (used where a row is not a `Label`).
+struct GlassIconBadge: View {
+    let systemName: String
+    var size: CGFloat = LiquidGlassMetrics.iconBadgeSize
+    var tint: Color? = nil
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: size * 0.44, weight: .semibold))
+            .foregroundStyle(tint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.tint))
+            .frame(width: size, height: size)
+            .liquidGlassInset(cornerRadius: size / 2)
+            .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Menu picker row (Form-style "title … value" inside a glass card)
+
+struct GlassMenuPicker<SelectionValue: Hashable, Content: View>: View {
+    private let title: String
+    @Binding private var selection: SelectionValue
+    private let content: Content
+
+    init(_ title: String, selection: Binding<SelectionValue>, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self._selection = selection
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 8)
+            Picker(title, selection: $selection) {
+                content
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .liquidGlassStandardButtonStyle()
+        }
+    }
+}

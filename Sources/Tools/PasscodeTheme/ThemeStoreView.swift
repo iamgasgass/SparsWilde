@@ -45,9 +45,9 @@ struct RepositoriesListView: View {
     @ObservedObject var storeManager: ThemeStoreManager
     
     var body: some View {
-        Form {
+        GlassForm {
             if storeManager.isLoading {
-                Section {
+                GlassSection {
                     HStack {
                         Spacer()
                         ProgressView(L("theme_store_loading"))
@@ -56,7 +56,7 @@ struct RepositoriesListView: View {
                     .padding(.vertical, 20)
                 }
             } else if let error = storeManager.errorMessage {
-                Section {
+                GlassSection {
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 48))
@@ -72,13 +72,18 @@ struct RepositoriesListView: View {
                             }
                         } label: {
                             Text(L("theme_store_retry"))
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, 10)
+                                .frame(minHeight: 36)
+                                .liquidGlassButtonLabel(cornerRadius: 18)
                         }
+                        .liquidGlassButtonStyle()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
                 }
             } else if storeManager.repositories.isEmpty {
-                Section {
+                GlassSection {
                     VStack(spacing: 12) {
                         Image(systemName: "folder")
                             .font(.system(size: 48))
@@ -91,7 +96,7 @@ struct RepositoriesListView: View {
                     .padding(.vertical, 20)
                 }
             } else {
-                Section(header: Text(L("theme_store_title"))) {
+                GlassSection(header: Text(L("theme_store_title"))) {
                     ForEach(storeManager.repositories) { repository in
                         RepositoryRowView(repository: repository, storeManager: storeManager)
                     }
@@ -119,11 +124,8 @@ struct RepositoryRowView: View {
                 await storeManager.fetchThemes(from: repository)
             }
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "folder.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.tint)
-                    .frame(width: 40, height: 40)
+            HStack(spacing: 14) {
+                GlassIconBadge(systemName: "folder.fill", size: 40)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(repository.name)
@@ -140,11 +142,9 @@ struct RepositoryRowView: View {
                     }
                 }
             }
-            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glassNavigationRow)
         .task {
             await fetchThemeCount()
         }
@@ -233,6 +233,7 @@ struct ThemesListView: View {
                 .padding(.vertical, 12)
             }
         }
+        .liquidGlassBackground()
         .liquidGlassScreenStyle()
         .navigationTitle(repository.name)
         .toolbar {
@@ -277,11 +278,10 @@ struct RemoteThemeCardView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 120)
-                    .clipped()
-                    .cornerRadius(10)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             } else {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.secondary.opacity(0.15))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.primary.opacity(0.07))
                     .frame(height: 120)
                     .overlay(ProgressView())
             }
@@ -326,7 +326,7 @@ struct RemoteThemeCardView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 32)
-                    .liquidGlassButtonLabel(prominent: true, cornerRadius: 8)
+                    .liquidGlassButtonLabel(prominent: true, cornerRadius: 16)
                 }
                 .liquidGlassButtonStyle(prominent: true)
                 .tint(AppTheme.accent)
@@ -335,8 +335,8 @@ struct RemoteThemeCardView: View {
                 .opacity(isDownloading ? 0.55 : 1.0)
             }
         }
-        .padding(10)
-        .liquidGlassSurface(cornerRadius: 14)
+        .padding(12)
+        .liquidGlassSurface(cornerRadius: LiquidGlassMetrics.tileCornerRadius)
         .task {
             await loadPreviewImage()
         }

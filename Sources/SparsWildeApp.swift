@@ -109,7 +109,7 @@ struct UnsupportedVersionView: View {
                             .foregroundColor(.primary)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 8)
-                            .liquidGlassSurface(cornerRadius: 8)
+                            .liquidGlassSurface(cornerRadius: 20)
                     }
                     .padding(.top, 8)
                 }
@@ -133,8 +133,8 @@ struct UnsupportedVersionView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }
-                .padding(16)
-                .liquidGlassSurface(cornerRadius: 12)
+                .padding(LiquidGlassMetrics.rowHorizontalPadding)
+                .liquidGlassSurface(cornerRadius: LiquidGlassMetrics.cardCornerRadius)
                 .padding(.horizontal, 32)
                 .padding(.top, 12)
             }

@@ -53,7 +53,7 @@ struct AppTheme {
     }
 }
 
-// MARK: - Primary Action Button (Feather Style)
+// MARK: - Primary Action Button (Liquid Glass prominent)
 
 struct WalletStyleButton: View {
     let title: String
@@ -73,15 +73,12 @@ struct WalletStyleButton: View {
             }
             .frame(maxWidth: .infinity)
             .frame(minHeight: 50)
-            .liquidGlassButtonLabel(prominent: true, cornerRadius: 14)
+            .liquidGlassButtonLabel(prominent: true, cornerRadius: 25)
         }
         .liquidGlassButtonStyle(prominent: true)
         .tint(AppTheme.accent)
         .opacity(disabled ? 0.55 : 1.0)
         .disabled(disabled)
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 
@@ -98,14 +95,11 @@ struct SecondaryActionButton: View {
                 .font(.headline.bold())
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 50)
-                .liquidGlassButtonLabel(cornerRadius: 14)
+                .liquidGlassButtonLabel(cornerRadius: 25)
         }
         .liquidGlassButtonStyle()
         .opacity(disabled ? 0.35 : 1.0)
         .disabled(disabled)
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 
@@ -129,7 +123,7 @@ struct AppSectionHeader: View {
     }
 }
 
-// MARK: - Card Row (Feather-style Label row)
+// MARK: - Card Row (row inside a Liquid Glass card)
 
 struct CardRow: View {
     let title: String
@@ -139,10 +133,12 @@ struct CardRow: View {
     let trailing: AnyView?
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             if let ok {
-                Image(systemName: ok ? "checkmark.seal.fill" : "xmark.seal.fill")
-                    .foregroundStyle(ok ? .green : .red)
+                GlassIconBadge(
+                    systemName: ok ? "checkmark.seal.fill" : "xmark.seal.fill",
+                    tint: ok ? .green : .red
+                )
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -160,12 +156,7 @@ struct CardRow: View {
 
             if let trailing { trailing }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(cornerRadius: 14)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 }
 

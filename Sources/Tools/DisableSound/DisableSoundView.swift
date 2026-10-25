@@ -5,8 +5,8 @@ struct DisableSoundView: View {
     @AppStorage("DisableDisclosureSoundEnabled") private var enabled: Bool = false
 
     var body: some View {
-        Form {
-            Section(header: Text(L("tool_disable_sound"))) {
+        GlassForm {
+            GlassSection(header: Text(L("tool_disable_sound"))) {
                 Toggle(L("enable_tweak"), isOn: $enabled)
             }
         }

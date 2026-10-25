@@ -24,7 +24,7 @@ struct MobileGestaltView: View {
     @State var modelName: String = ""
 
     var body: some View {
-        Form {
+        GlassForm {
             enableSection
             deviceSubtypeSection
             hardwareFeaturesSection
@@ -111,15 +111,15 @@ struct MobileGestaltView: View {
 
     @ViewBuilder
     private var enableSection: some View {
-        Section(header: Text(L("tool_mobile_gestalt"))) {
+        GlassSection(header: Text(L("tool_mobile_gestalt"))) {
             Toggle(L("enable_tweak"), isOn: $toolStore.replaceMobileGestaltEnabled)
         }
     }
 
     @ViewBuilder
     private var deviceSubtypeSection: some View {
-        Section(header: Text(L("section_device_subtype"))) {
-            Picker(L("mg_device_subtype_preset"), selection: $dynamicIslandType) {
+        GlassSection(header: Text(L("section_device_subtype"))) {
+            GlassMenuPicker(L("mg_device_subtype_preset"), selection: $dynamicIslandType) {
                 Text(L("mg_subtype_none")).tag(0)
                 Text(L("mg_subtype_2436")).tag(1)
                 Text(L("mg_subtype_2556")).tag(2)
@@ -129,7 +129,6 @@ struct MobileGestaltView: View {
                 Text(L("mg_subtype_2868")).tag(6)
                 Text(L("mg_subtype_2736")).tag(7)
             }
-            .pickerStyle(.menu)
             .onChange(of: dynamicIslandType) { newValue in
                 applyDynamicIsland(type: newValue)
             }
@@ -141,13 +140,14 @@ struct MobileGestaltView: View {
             
             if enableModelName {
                 TextField(L("mg_model_name_placeholder"), text: $modelName)
+                    .liquidGlassField()
             }
         }
     }
 
     @ViewBuilder
     private var hardwareFeaturesSection: some View {
-        Section(header: Text(L("section_hardware_features"))) {
+        GlassSection(header: Text(L("section_hardware_features"))) {
             Toggle(L("mg_boot_chime"), isOn: bindingForMGKeys(["QHxt+hGLaBPbQJbXiUJX3w"]))
             Toggle(L("mg_charge_limit"), isOn: bindingForMGKeys(["37NVydb//GP/GrhuTN+exg"]))
                 .disabled(Utils.requiresVersion(17))
@@ -161,7 +161,7 @@ struct MobileGestaltView: View {
 
     @ViewBuilder
     private var displayAndUISection: some View {
-        Section(header: Text(L("section_display_and_ui"))) {
+        GlassSection(header: Text(L("section_display_and_ui"))) {
             Toggle(L("mg_disable_parallax"), isOn: bindingForMGKeys(["UIParallaxCapability"], type: Int.self, defaultValue: 1, enableValue: 0))
             Toggle(L("mg_stage_manager"), isOn: bindingForMGKeys(["qeaj75wk3HF4DwQ8qbIi7g"]))
             Toggle(L("mg_aod"), isOn: bindingForMGKeys(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
@@ -173,7 +173,7 @@ struct MobileGestaltView: View {
 
     @ViewBuilder
     private var systemFeaturesSection: some View {
-        Section(header: Text(L("section_system_features"))) {
+        GlassSection(header: Text(L("section_system_features"))) {
             Toggle(L("mg_install_ipad_apps"), isOn: bindingForMGKeys(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, defaultValue: [1], enableValue: [1, 2]))
             Toggle(L("mg_disable_region"), isOn: bindingForRegionRestriction())
             Toggle(L("mg_apple_pencil"), isOn: bindingForMGKeys(["yhHcB0iH0d1XzPO/CFd3ow"]))
@@ -185,14 +185,14 @@ struct MobileGestaltView: View {
 
     @ViewBuilder
     private var advancedSection: some View {
-        Section(header: Text(L("section_internal_features"))) {
+        GlassSection(header: Text(L("section_internal_features"))) {
             Toggle(L("mg_internal_storage"), isOn: bindingForMGKeys(["LBJfwOEzExRxzlAnSuI7eg"]))
             Toggle(L("mg_internal_stuff"), isOn: bindingForInternalStuff())
             Toggle(L("mg_security_research"), isOn: bindingForMGKeys(["XYlJKKkj2hztRP1NWWnhlw"]))
             Toggle(L("mg_metal_hud"), isOn: bindingForMGKeys(["EqrsVvjcYDdxHBiQmGhAWw"]))
             Toggle(L("mg_apple_intelligence"), isOn: bindingForAppleIntelligence())
                 .disabled(Utils.requiresVersion(18))
-            Picker(L("mg_device_model"), selection: $productType) {
+            GlassMenuPicker(L("mg_device_model"), selection: $productType) {
                 Text(L("mg_device_model_unchanged")).tag(MobileGestaltView.machineName())
                 if UIDevice.current.userInterfaceIdiom == .pad {
                     Text("iPad Pro 11 inch 5th Gen").tag("iPad16,3")
@@ -201,7 +201,6 @@ struct MobileGestaltView: View {
                     Text("iPhone 16 Pro Max").tag("iPhone17,2")
                 }
             }
-            .pickerStyle(.menu)
             let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary
             Toggle("Become iPadOS", isOn: bindingForTrollPad())
                 .disabled(cacheExtra?["+3Uf0Pm5F8Xy7Onyvko0vA"] as? String != "iPhone")
@@ -210,7 +209,7 @@ struct MobileGestaltView: View {
 
     @ViewBuilder
     private var saveResetSection: some View {
-        Section(header: Text(L("section_save_reset"))) {
+        GlassSection(header: Text(L("section_save_reset"))) {
             Button(action: {
                 do {
                     saveProductType()

@@ -135,7 +135,7 @@ struct ApplyTabView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            GlassForm {
                 enabledTweaksSection
                 optionsSection
                 statusSection
@@ -165,7 +165,7 @@ struct ApplyTabView: View {
 
     @ViewBuilder
     private var enabledTweaksSection: some View {
-        Section(header: Text(L("section_tweaks"))) {
+        GlassSection(header: Text(L("section_tweaks"))) {
             if enabledTweaks.isEmpty {
                 Label {
                     Text(L("apply_no_tweaks_hint"))
@@ -190,7 +190,7 @@ struct ApplyTabView: View {
 
     @ViewBuilder
     private var optionsSection: some View {
-        Section(header: Text(L("section_options"))) {
+        GlassSection(header: Text(L("section_options"))) {
             Toggle(isOn: $toolStore.soundRespringEnabled) {
                 Label(L("respring_after_apply"), systemImage: "arrow.clockwise")
             }
@@ -206,7 +206,7 @@ struct ApplyTabView: View {
     @ViewBuilder
     private var statusSection: some View {
         if isRunning || statusText != "" {
-            Section {
+            GlassSection {
                 HStack(spacing: 12) {
                     if isRunning {
                         ProgressView()
@@ -229,7 +229,7 @@ struct ApplyTabView: View {
 
     @ViewBuilder
     private var applyButtonSection: some View {
-        Section {
+        GlassSection {
             WalletStyleButton(
                 title: isRunning ? L("applying") : L("apply_enabled_tweaks"),
                 isLoading: isRunning,

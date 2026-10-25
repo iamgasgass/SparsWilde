@@ -20,14 +20,14 @@ struct ThemesUIView: View {
     @State private var suppressDynamicIsland = false           // SBSuppressDynamicIslandCompletely
     
     var body: some View {
-        Form {
+        GlassForm {
             // Enable Tool
-            Section(L("themes_ui_title")) {
+            GlassSection(L("themes_ui_title")) {
                 Toggle(L("enable_tool"), isOn: $toolStore.themesUIEnabled)
             }
 
             // Liquid Glass (Solarium) Section
-            Section(header: Text(L("section_liquid_glass"))) {
+            GlassSection(header: Text(L("section_liquid_glass"))) {
                 Toggle(L("themes_force_fallback"), isOn: $solariumForceFallback)
                     .onChange(of: solariumForceFallback) { autoSave() }
 
@@ -57,13 +57,13 @@ struct ThemesUIView: View {
             }
 
             // Springboard Options Section
-            Section(header: Text(L("themes_springboard_section"))) {
+            GlassSection(header: Text(L("themes_springboard_section"))) {
                 Toggle(L("themes_hide_dynamic_island"), isOn: $suppressDynamicIsland)
                     .onChange(of: suppressDynamicIsland) { autoSave() }
             }
 
             // Reset Section
-            Section(header: Text(L("section_save_settings"))) {
+            GlassSection(header: Text(L("section_save_settings"))) {
                 Button(L("themes_reset_button"), role: .destructive) {
                     resetAllSettings()
                 }

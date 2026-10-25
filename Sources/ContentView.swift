@@ -138,7 +138,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            Form {
+            GlassForm {
                 statusSection
                 tweaksSection
             }
@@ -270,7 +270,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var statusSection: some View {
-        Section(header: Text(L("section_status"))) {
+        GlassSection(header: Text(L("section_status"))) {
             CardRow(
                 title: L("system_status"),
                 subtitle: _isSystemReady ? L("system_status_ready") : L("system_status_not_ready"),
@@ -342,7 +342,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var tweaksSection: some View {
-        Section(header: Text(L("section_tweaks"))) {
+        GlassCardGroup(header: Text(L("section_tweaks"))) {
             toolNavigationLink(
                 value: "MobileGestalt",
                 title: L("tool_mobile_gestalt"),
@@ -522,37 +522,39 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Tool Navigation Link (Feather-style)
+    // MARK: - Tool Navigation Link (Liquid Glass tile)
 
     @ViewBuilder
     private func toolNavigationLink(value: String, title: String, subtitle: String, icon: String, isEnabled: Bool) -> some View {
         NavigationLink(value: value) {
-            HStack {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                } icon: {
-                    Image(systemName: icon)
+            HStack(spacing: 14) {
+                GlassIconBadge(systemName: icon, size: 44)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
-                Spacer()
+                .multilineTextAlignment(.leading)
+
+                Spacer(minLength: 8)
+
                 if isEnabled {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundStyle(.green)
-                        .font(.caption)
+                        .font(.subheadline)
                 }
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .liquidGlassSurface(cornerRadius: 14, interactive: true)
         }
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
     }
 
     // MARK: - Logic Functions
@@ -1189,8 +1191,8 @@ struct StatusSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text(L("system_status"))) {
+            GlassForm {
+                GlassSection(header: Text(L("system_status"))) {
                     CardRow(title: L("status_pairing_file"), subtitle: pairingFileLoaded ? L("status_pairing_loaded") : L("status_pairing_missing"), ok: pairingFileLoaded, showChevron: false, trailing: nil)
 
                     CardRow(title: L("status_heartbeat"), subtitle: heartbeatRunning ? L("status_heartbeat_running") : L("status_heartbeat_stopped"), ok: heartbeatRunning, showChevron: false, trailing: nil)
@@ -1198,7 +1200,7 @@ struct StatusSheet: View {
                     CardRow(title: L("status_ddi"), subtitle: ddiMounted ? L("status_ddi_mounted") : L("status_ddi_unmounted"), ok: ddiMounted, showChevron: false, trailing: nil)
                 }
 
-                Section(header: Text(L("section_actions"))) {
+                GlassSection(header: Text(L("section_actions"))) {
                     if heartbeatRunning && !ddiMounted {
                         Button(L("button_mount_ddi")) {
                             onMountDDI()
@@ -1241,7 +1243,7 @@ struct ApplySheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            GlassForm {
                 optionsSection
                 statusSection
                 if !logs.isEmpty {
@@ -1265,14 +1267,14 @@ struct ApplySheet: View {
 
     @ViewBuilder
     private var optionsSection: some View {
-        Section {
+        GlassSection {
             Toggle(L("respring_after_apply"), isOn: $enableRespring)
         }
     }
 
     @ViewBuilder
     private var statusSection: some View {
-        Section(header: Text(L("section_status"))) {
+        GlassSection(header: Text(L("section_status"))) {
             HStack(spacing: 12) {
                 if isRunning {
                     ProgressView()
@@ -1286,7 +1288,7 @@ struct ApplySheet: View {
 
     @ViewBuilder
     private var logsSection: some View {
-        Section(header: Text(L("logs"))) {
+        GlassSection(header: Text(L("logs"))) {
             ForEach(logs, id: \.self) { log in
                 Text(log)
                     .font(.system(size: 12, design: .monospaced))
@@ -1297,14 +1299,14 @@ struct ApplySheet: View {
 
     @ViewBuilder
     private var actionsSection: some View {
-        Section(header: Text(L("section_actions"))) {
+        GlassSection(header: Text(L("section_actions"))) {
             Button(L("clear_uuid"), role: .destructive) {
                 onClearUUID()
             }
             .disabled(bookassetdUUID.isEmpty)
         }
 
-        Section {
+        GlassSection {
             WalletStyleButton(
                 title: isRunning ? L("applying") : L("apply_enabled_tweaks"),
                 isLoading: isRunning,
