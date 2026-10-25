@@ -1,6 +1,6 @@
 //
 //  LocalizationExample.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  This file shows examples of how to integrate localization into existing views.
 //  To use localization, replace hardcoded strings with L() function calls.

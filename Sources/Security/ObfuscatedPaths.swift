@@ -1,6 +1,6 @@
 //
 //  ObfuscatedPaths.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  Central location for obfuscated system paths used throughout the app
 //  These strings are hidden from the binary's __cstring section via SecureString
@@ -8,7 +8,7 @@
 
 import Foundation
 
-/// Collection of obfuscated system paths used throughout Gass SparsWilde
+/// Collection of obfuscated system paths used throughout SparsWilde
 /// All paths are decoded at runtime from byte arrays to prevent static analysis
 enum ObfuscatedPaths {
     

@@ -1,6 +1,6 @@
 //
 //  FeatureFlagsView.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  UI for configuring iOS Feature Flags
 //

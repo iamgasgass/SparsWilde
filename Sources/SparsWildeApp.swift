@@ -11,7 +11,7 @@ extension UIDocumentPickerViewController {
 }
 
 @main
-struct GassSparsWildeApp: App {
+struct SparsWildeApp: App {
     // MARK: - Anti-Tamper Header
     // This constant serves as a visible warning in the binary to deter reverse engineering.
     // The dummy reference in init() prevents compiler optimization from stripping it.
@@ -24,7 +24,7 @@ struct GassSparsWildeApp: App {
         if Self.antiTamperMessage.isEmpty { return }
         
         // Set global tint color from user preference (default #ef9f76)
-        let hexString = UserDefaults.standard.string(forKey: "GassSparsWilde.userTintColor") ?? "#ef9f76"
+        let hexString = UserDefaults.standard.string(forKey: "SparsWilde.userTintColor") ?? "#ef9f76"
         let tintColor = UIColor(Color(hex: hexString))
         UIView.appearance(whenContainedInInstancesOf: [UIWindow.self]).tintColor = tintColor
         UITabBar.appearance().tintColor = tintColor

@@ -2,8 +2,8 @@ import AppIntents
 
 @available(iOS 16.0, *)
 struct ApplyTweaksIntent: AppIntent {
-    static var title: LocalizedStringResource = "Apply Gass SparsWilde Tweaks"
-    static var description = IntentDescription("Apply all enabled Gass SparsWilde tweaks to your device.")
+    static var title: LocalizedStringResource = "Apply SparsWilde Tweaks"
+    static var description = IntentDescription("Apply all enabled SparsWilde tweaks to your device.")
     static var openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
@@ -16,7 +16,7 @@ struct ApplyTweaksIntent: AppIntent {
 }
 
 @available(iOS 16.0, *)
-struct GassSparsWildeShortcutsProvider: AppShortcutsProvider {
+struct SparsWildeShortcutsProvider: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: ApplyTweaksIntent(),
@@ -32,5 +32,5 @@ struct GassSparsWildeShortcutsProvider: AppShortcutsProvider {
 }
 
 extension Notification.Name {
-    static let applyTweaksFromShortcut = Notification.Name("GassSparsWilde.applyTweaksFromShortcut")
+    static let applyTweaksFromShortcut = Notification.Name("SparsWilde.applyTweaksFromShortcut")
 }

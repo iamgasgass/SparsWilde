@@ -20,7 +20,7 @@ final class LogModel: ObservableObject {
     }
 
     /// Save current log to Documents as a .txt file and return its URL.
-    func exportToDocuments(fileName: String = "Gass SparsWilde-Log.txt") throws -> URL {
+    func exportToDocuments(fileName: String = "SparsWilde-Log.txt") throws -> URL {
         let url = URL.documentsDirectory.appendingPathComponent(fileName)
         try text.write(to: url, atomically: true, encoding: .utf8)
         return url

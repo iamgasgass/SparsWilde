@@ -43,7 +43,7 @@ struct AppTheme {
     
     /// Dynamic accent color from user preference
     static var accent: Color {
-        let hex = UserDefaults.standard.string(forKey: "GassSparsWilde.userTintColor") ?? "#ef9f76"
+        let hex = UserDefaults.standard.string(forKey: "SparsWilde.userTintColor") ?? "#ef9f76"
         return Color(hex: hex)
     }
     
@@ -115,7 +115,7 @@ struct SecondaryActionButton: View {
 // MARK: - App Title Header (not used in Feather-style, kept for compatibility)
 
 struct AppTitleHeader: View {
-    private let title = "Gass SparsWilde"
+    private let title = "SparsWilde"
     private let subtitle = "itunesstored & bookassetd sbx escape"
 
     var body: some View {

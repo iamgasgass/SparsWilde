@@ -143,7 +143,7 @@ struct ContentView: View {
                 tweaksSection
             }
             .headerProminence(.increased)
-            .navigationTitle("Gass SparsWilde")
+            .navigationTitle("SparsWilde")
             .navigationDestination(for: String.self) { route in
                 destinationView(for: route)
             }

@@ -15,7 +15,7 @@ struct MainViewWithNavigation: View {
     @State private var isSystemReady = false
     @State private var heartbeatRunning = false
     @State private var ddiMounted = false
-    @AppStorage("GassSparsWilde.userTintColor") private var userTintColorHex: String = "#ef9f76"
+    @AppStorage("SparsWilde.userTintColor") private var userTintColorHex: String = "#ef9f76"
     @State private var tintRefreshID = UUID()
     
     var body: some View {
@@ -271,7 +271,7 @@ struct ApplyTabView: View {
             )
 
             if case .success = toolRunner.state {
-                sendLocalNotification(title: "Gass SparsWilde", body: L("apply_done"))
+                sendLocalNotification(title: "SparsWilde", body: L("apply_done"))
                 try? await Task.sleep(nanoseconds: 8_000_000_000)
                 if toolStore.soundRespringEnabled {
                     try? RespringHelper.respring()
@@ -283,7 +283,7 @@ struct ApplyTabView: View {
             }
 
             if case .failed(let message) = toolRunner.state {
-                sendLocalNotification(title: "Gass SparsWilde", body: L("apply_failed").replacingOccurrences(of: "{message}", with: message))
+                sendLocalNotification(title: "SparsWilde", body: L("apply_failed").replacingOccurrences(of: "{message}", with: message))
                 lastError = message
                 showErrorAlert = true
             }

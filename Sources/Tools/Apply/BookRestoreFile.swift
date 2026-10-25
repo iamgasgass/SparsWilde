@@ -1,13 +1,13 @@
 //
 //  BookRestoreFile.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  Created by YangJiii on 2/1/26.
 //
 
 //
 //  BookRestoreFile.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  Unified model for files to be applied via BookRestore method
 //

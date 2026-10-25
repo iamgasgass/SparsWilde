@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="GassSparsWilde_1024.png" width="120" alt="Gass SparsWilde Logo" />
+  <img src="SparsWilde_1024.png" width="120" alt="SparsWilde Logo" />
 </div>
 
-# Gass SparsWilde (Mobile)
+# SparsWilde (Mobile)
 
-**Gass SparsWilde** is a tool utilizing `itunesstored` & `bookassetd` exploits, designed for iPhone and iPad running the latest **iOS Version 26.2b1**.
+**SparsWilde** is a tool utilizing `itunesstored` & `bookassetd` exploits, designed for iPhone and iPad running the latest **iOS Version 26.2b1**.
 
 It operates as a standalone on-device application, functioning independently like modern apps. It leverages the `sparserestore` exploit to write data to files situated outside of the intended restore location.
 
@@ -28,7 +28,7 @@ It operates as a standalone on-device application, functioning independently lik
 ## Usage Guides
 
 ### Apple Wallet Background Guide
-Step-by-step guide for changing Apple Wallet pass/card backgrounds using Gass SparsWilde:
+Step-by-step guide for changing Apple Wallet pass/card backgrounds using SparsWilde:
 
 🔗 https://gist.github.com/YangJiiii/06daf0c2d0fa11002757e501622353ea
 
@@ -43,14 +43,14 @@ Detailed instructions on customizing the passcode keypad background using `.pass
 
 ## Getting Your .mobiledevicepairing File (Impactor)
 
-Gass SparsWilde uses **Impactor** to automatically handle pairing.
+SparsWilde uses **Impactor** to automatically handle pairing.
 
 🔗 https://github.com/khcrysalis/Impactor
 
 ### Steps
 1. Download and open **Impactor** on your computer.
 2. Connect your iPhone or iPad via USB.
-3. In Impactor, select **Gass SparsWilde**.
+3. In Impactor, select **SparsWilde**.
 4. Click **Import**.
 5. Impactor will automatically generate and inject the required pairing data.
 
@@ -61,7 +61,7 @@ No manual export or file transfer is required.
 ## Setting Up VPN
 1. Download **LocaldevVPN** from the iOS App Store.
 2. Enable the VPN inside the app.
-3. Launch **Gass SparsWilde**.
+3. Launch **SparsWilde**.
 
 ---
 
@@ -84,6 +84,6 @@ Special thanks to the following for their contributions and support:
 
 ## Pairing file formats
 
-Gass SparsWilde accepts pairing records in both `.mobiledevicepairing` and `.plist` formats. XML and binary property lists are supported; imported records are validated and normalized to XML plist before being stored.
+SparsWilde accepts pairing records in both `.mobiledevicepairing` and `.plist` formats. XML and binary property lists are supported; imported records are validated and normalized to XML plist before being stored.
 
 The source project has been rebranded locally. Existing upstream URLs for update metadata, translations, and theme catalogs are retained until the new repository/service URLs are provided.

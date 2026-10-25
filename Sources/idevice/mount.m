@@ -1,6 +1,6 @@
 //
 //  mount.m
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  DDI mounting support (adapted from StikDebug)
 //

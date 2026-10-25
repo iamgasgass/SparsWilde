@@ -1,6 +1,6 @@
 //
 //  SecureString.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  String obfuscation utility for IP protection and anti-reverse engineering
 //

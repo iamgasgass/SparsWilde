@@ -1,6 +1,6 @@
 //
 //  FeatureFlagsModel.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  Feature Flags models based on Nugget implementation
 //

@@ -1,6 +1,6 @@
 //
 //  BookRestoreApplyTask.swift
-//  Gass SparsWilde
+//  SparsWilde
 //
 //  Unified task for applying multiple files via BookRestore method
 //
@@ -641,9 +641,9 @@ enum BookRestoreApplyTask {
                 '\(zassetPathEsc)', 'productType=PUB&price=0&salableAdamId=765107106&pricingParameters=PLUS&pg=default&mtApp=com.apple.iBooks&mtEventTime=1746298553233&mtOsVersion=18.4.1&mtPageId=SearchIncrementalTopResults&mtPageType=Search&mtPageContext=search&mtTopic=xp_amp_bookstore&mtRequestId=35276ff6-5c8b-4136-894e-b6d8fc7677b3',
                 'https://p19-buy.itunes.apple.com/WebObjects/MZFastFinance.woa/wa/songDownloadDone?download-id=J19N_PUB_190099164604738&cancel=1',
                 '4GG2695MJK.com.apple.iBooks',
-                'Gass SparsWilde', '\(fileNameEsc)', '\(zdownloadIDEsc)', 'Contemporary Romance', 'ebook',
-                '\(zplistPathEsc)', 'Applied via Gass SparsWilde', 'https://is1-ssl.mzstatic.com/image/thumb/Publication126/v4/3d/b6/0a/3db60a65-b1a5-51c3-b306-c58870663fd3/Portada.jpg/200x200bb.jpg',
-                'Gass SparsWilde File', 'J19N_PUB_190099164604738',
+                'SparsWilde', '\(fileNameEsc)', '\(zdownloadIDEsc)', 'Contemporary Romance', 'ebook',
+                '\(zplistPathEsc)', 'Applied via SparsWilde', 'https://is1-ssl.mzstatic.com/image/thumb/Publication126/v4/3d/b6/0a/3db60a65-b1a5-51c3-b306-c58870663fd3/Portada.jpg/200x200bb.jpg',
+                'SparsWilde File', 'J19N_PUB_190099164604738',
                 '\(zurlEsc)', ?
             );
             """
