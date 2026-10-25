@@ -1,0 +1,248 @@
+name: Build SparsWilde Unsigned IPA
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sparswilde-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      SCHEME: SparsWilde
+      CONFIGURATION: Release
+      BUILD_DIR: ${{ github.workspace }}/build
+      IPA: ${{ github.workspace }}/SparsWilde-Unsigned.ipa
+      EXPECTED_BUNDLE_ID: com.iamgasgass.sparswilde
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "$DEVELOPER_DIR" ]; then
+            LATEST="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n 1)"
+            if [ -z "$LATEST" ]; then
+              echo "::error::No Xcode installation found in /Applications"
+              exit 1
+            fi
+            echo "Pinned Xcode not found, falling back to $LATEST"
+            echo "DEVELOPER_DIR=$LATEST/Contents/Developer" >> "$GITHUB_ENV"
+            export DEVELOPER_DIR="$LATEST/Contents/Developer"
+          fi
+
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Locate Xcode project
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROJECTS=()
+          while IFS= read -r project; do
+            PROJECTS+=("$project")
+          done < <(
+            find "$GITHUB_WORKSPACE" \
+              -maxdepth 8 \
+              -type d \
+              -name "*.xcodeproj" \
+              -print \
+              | sort
+          )
+
+          if [ "${#PROJECTS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one Xcode project; found ${#PROJECTS[@]}"
+            printf '%s\n' "${PROJECTS[@]}"
+            exit 1
+          fi
+
+          PROJECT="${PROJECTS[0]}"
+          echo "PROJECT=$PROJECT" >> "$GITHUB_ENV"
+          echo "PROJECT_DIR=$(dirname "$PROJECT")" >> "$GITHUB_ENV"
+
+          echo "Using project: $PROJECT"
+
+      - name: Verify shared scheme and resolve packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          xcodebuild -project "$PROJECT" -list
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project "$PROJECT" \
+            -scheme "$SCHEME"
+
+          test -f "$PROJECT_DIR/Sources/Assets.xcassets/AppIcon.appiconset/Contents.json" || {
+            echo "::error::SparsWilde AppIcon asset catalog not found"
+            exit 1
+          }
+
+      - name: Build SparsWilde for iOS (unsigned)
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          rm -rf "$BUILD_DIR"
+          mkdir -p "$BUILD_DIR/logs"
+          LOG="$BUILD_DIR/logs/xcodebuild.log"
+
+          xcodebuild \
+            clean build \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$BUILD_DIR" \
+            PRODUCT_NAME=SparsWilde \
+            EXECUTABLE_NAME=SparsWilde \
+            PRODUCT_BUNDLE_IDENTIFIER="$EXPECTED_BUNDLE_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            2>&1 | tee "$LOG"
+
+          STATUS=${PIPESTATUS[0]}
+          if [ "$STATUS" -ne 0 ]; then
+            echo ""
+            echo "========== BUILD ERRORS =========="
+            grep -nEi \
+              'error:|fatal error:|BUILD FAILED|SwiftCompile|CodeSign|Signing|Provisioning' \
+              "$LOG" | head -n 200 || true
+            echo ""
+            tail -n 150 "$LOG" || true
+            exit "$STATUS"
+          fi
+
+      - name: Verify SparsWilde app bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP="$BUILD_DIR/Build/Products/${CONFIGURATION}-iphoneos/SparsWilde.app"
+          INFO="$APP/Info.plist"
+          BINARY="$APP/SparsWilde"
+
+          echo "Checking: $APP"
+          test -d "$APP" || {
+            echo "::error::SparsWilde.app not found"
+            find "$BUILD_DIR/Build/Products" -maxdepth 5 -type d -name '*.app' -print || true
+            exit 1
+          }
+          test -f "$INFO" || { echo "::error::Info.plist missing"; exit 1; }
+          test -f "$BINARY" || {
+            echo "::error::SparsWilde executable missing"
+            find "$APP" -maxdepth 2 -print
+            exit 1
+          }
+          test -f "$APP/Assets.car" || {
+            echo "::error::Compiled asset catalog (Assets.car) missing"
+            exit 1
+          }
+
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO")
+          DISPLAY_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$INFO")
+          EXECUTABLE=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$INFO")
+
+          echo "CFBundleDisplayName: $DISPLAY_NAME"
+          echo "CFBundleExecutable: $EXECUTABLE"
+          echo "CFBundleIdentifier: $BUNDLE_ID"
+
+          if [ "$BUNDLE_ID" != "$EXPECTED_BUNDLE_ID" ]; then
+            echo "::error::Unexpected Bundle ID: $BUNDLE_ID"
+            exit 1
+          fi
+          if [ "$DISPLAY_NAME" != "SparsWilde" ] || [ "$EXECUTABLE" != "SparsWilde" ]; then
+            echo "::error::App display name or executable name is not SparsWilde"
+            exit 1
+          fi
+
+          echo ""
+          echo "Executable file:"
+          file "$BINARY"
+          echo ""
+          echo "Architectures:"
+          lipo -info "$BINARY"
+          echo ""
+          echo "Icon metadata:"
+          if /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons' "$INFO"; then
+            :
+          elif /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$INFO"; then
+            :
+          else
+            echo "::error::Icon metadata missing from Info.plist"
+            exit 1
+          fi
+
+          if [ -d "$APP/_CodeSignature" ] || [ -f "$APP/embedded.mobileprovision" ]; then
+            echo "::error::The app unexpectedly contains signing data; an unsigned IPA was requested"
+            exit 1
+          fi
+          echo "App bundle verified (unsigned)."
+
+      - name: Create unsigned IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP="$BUILD_DIR/Build/Products/${CONFIGURATION}-iphoneos/SparsWilde.app"
+          PAYLOAD="$GITHUB_WORKSPACE/Payload"
+
+          rm -rf "$PAYLOAD"
+          rm -f "$IPA"
+          mkdir -p "$PAYLOAD"
+          cp -R "$APP" "$PAYLOAD/SparsWilde.app"
+
+          cd "$GITHUB_WORKSPACE"
+          ditto -c -k --sequesterRsrc --keepParent "$PAYLOAD" "$IPA"
+          test -f "$IPA"
+
+          echo "IPA created:"
+          ls -lh "$IPA"
+          echo ""
+          echo "IPA structure:"
+          unzip -l "$IPA"
+          unzip -l "$IPA" | grep -F 'Payload/SparsWilde.app/SparsWilde' >/dev/null
+          unzip -l "$IPA" | grep -F 'Payload/SparsWilde.app/Info.plist' >/dev/null
+          unzip -l "$IPA" | grep -F 'Payload/SparsWilde.app/Assets.car' >/dev/null
+          echo "IPA structure OK. This IPA is unsigned and must be signed before normal device installation."
+
+      - name: Upload unsigned IPA
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SparsWilde-Unsigned-IPA
+          path: ${{ env.IPA }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SparsWilde-Build-Log
+          path: ${{ env.BUILD_DIR }}/logs/xcodebuild.log
+          if-no-files-found: warn
+          retention-days: 7
