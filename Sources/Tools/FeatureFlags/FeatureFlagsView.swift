@@ -66,6 +66,7 @@ struct FeatureFlagsView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("tool_feature_flags"))
         .navigationBarTitleDisplayMode(.inline)

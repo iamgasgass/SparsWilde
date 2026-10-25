@@ -37,6 +37,7 @@ struct zPatchCustomView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("tool_zpatch_custom"))
         .navigationBarTitleDisplayMode(.inline)
@@ -120,6 +121,7 @@ struct zPatchCustomView: View {
                     .disabled(newSourcePath.isEmpty || newDestPath.isEmpty)
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(editingPatch != nil ? "Edit Patch" : "Add Patch")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

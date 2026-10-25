@@ -18,6 +18,19 @@ struct AdaptiveLiquidGlassAppStyle: ViewModifier {
     }
 }
 
+/// Shared styling for every independently scrolling screen and sheet. Native
+/// navigation bars, tab bars, alerts, menus, pickers, toggles and form controls
+/// are intentionally left to SwiftUI so the newest SDK can render its complete
+/// system Liquid Glass treatment rather than a hand-drawn imitation.
+struct AdaptiveLiquidGlassScreenStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .tint(AppTheme.accent)
+            .modifier(AdaptiveLiquidGlassDefaultButtonStyle())
+    }
+}
+
 /// Supplies the default style to ordinary buttons throughout the view tree.
 /// Components can still opt into a prominent style or a deliberate plain style.
 private struct AdaptiveLiquidGlassDefaultButtonStyle: ViewModifier {
@@ -106,16 +119,27 @@ struct AdaptiveLiquidGlassButtonLabel: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             content
         } else {
-            content
-                .foregroundStyle(prominent ? Color.white : Color.primary)
-                .background(
-                    prominent ? AppTheme.accent : Color(uiColor: .quaternarySystemFill),
-                    in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                )
+            fallbackLabel(for: content)
         }
+        #else
+        // When built with an older SDK, the native glass button style cannot
+        // be named at compile time. Always retain a visible fallback label,
+        // even if the app happens to run on iOS 26 or newer.
+        fallbackLabel(for: content)
+        #endif
+    }
+
+    private func fallbackLabel(for content: Content) -> some View {
+        content
+            .foregroundStyle(prominent ? Color.white : Color.primary)
+            .background(
+                prominent ? AppTheme.accent : Color(uiColor: .quaternarySystemFill),
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
     }
 }
 
@@ -206,6 +230,12 @@ extension View {
     /// canvas, native control styling, and translucent scroll content.
     func liquidGlassAppStyle() -> some View {
         modifier(AdaptiveLiquidGlassAppStyle())
+    }
+
+    /// Apply to Form, List and ScrollView roots so individually presented
+    /// screens inherit the same glass-aware scroll and control styling.
+    func liquidGlassScreenStyle() -> some View {
+        modifier(AdaptiveLiquidGlassScreenStyle())
     }
 
     func liquidGlassButtonStyle(prominent: Bool = false) -> some View {

@@ -81,9 +81,7 @@ struct SparsWildeApp: App {
 struct UnsupportedVersionView: View {
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
-                .ignoresSafeArea()
-            
+            // The app-level ambient canvas sits behind the glass surfaces.
             VStack(spacing: 24) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 60))
@@ -111,10 +109,7 @@ struct UnsupportedVersionView: View {
                             .foregroundColor(.primary)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(uiColor: .secondarySystemBackground))
-                            )
+                            .liquidGlassSurface(cornerRadius: 8)
                     }
                     .padding(.top, 8)
                 }
@@ -139,10 +134,7 @@ struct UnsupportedVersionView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(uiColor: .secondarySystemBackground))
-                )
+                .liquidGlassSurface(cornerRadius: 12)
                 .padding(.horizontal, 32)
                 .padding(.top, 12)
             }

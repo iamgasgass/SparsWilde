@@ -33,6 +33,7 @@ struct MobileGestaltView: View {
             advancedSection
             saveResetSection
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .alert("Message", isPresented: $showErrorAlert) {
             Button("OK") {}

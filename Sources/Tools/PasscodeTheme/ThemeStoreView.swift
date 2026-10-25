@@ -99,6 +99,7 @@ struct RepositoriesListView: View {
             }
             
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .refreshable {
             await storeManager.fetchRepositories()
@@ -232,6 +233,7 @@ struct ThemesListView: View {
                 .padding(.vertical, 12)
             }
         }
+        .liquidGlassScreenStyle()
         .navigationTitle(repository.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

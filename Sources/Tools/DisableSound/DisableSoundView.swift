@@ -10,6 +10,7 @@ struct DisableSoundView: View {
                 Toggle(L("enable_tweak"), isOn: $enabled)
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("tool_disable_sound"))
         .navigationBarTitleDisplayMode(.inline)

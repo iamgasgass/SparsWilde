@@ -58,6 +58,7 @@ struct LogView: View {
 
                 Spacer().id(0)
             }
+            .liquidGlassScreenStyle()
             .onAppear {
                 guard !ran else { return }
                 ran = true

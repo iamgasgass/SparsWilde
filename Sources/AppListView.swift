@@ -17,6 +17,7 @@ struct AppItemView: View {
                         }
                     }
                 }
+                .liquidGlassScreenStyle()
             } label: {
                 Text("View app details")
             }
@@ -33,6 +34,7 @@ struct AppItemView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .navigationTitle((appDetails["CFBundleName"] as? String) ?? bundleID)
     }
 
@@ -106,6 +108,7 @@ struct AppListView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .onAppear {
             Task {
                 do {

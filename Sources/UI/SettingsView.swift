@@ -40,6 +40,7 @@ struct SettingsView: View {
             tutorialSection
             appInfoSection
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("nav_settings"))
         .onAppear {
@@ -389,6 +390,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 8)
             }
+            .liquidGlassScreenStyle()
             .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         }
     }
@@ -493,6 +495,7 @@ struct AboutView: View {
             creditsSection
             translatorsSection
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("nav_about"))
         .onAppear {

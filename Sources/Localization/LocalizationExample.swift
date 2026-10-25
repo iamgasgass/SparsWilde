@@ -56,6 +56,7 @@ struct SettingsViewLocalized: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
     }
 }
 

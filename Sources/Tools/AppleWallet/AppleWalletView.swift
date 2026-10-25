@@ -56,6 +56,7 @@ struct AppleWalletView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("wallet_title"))
         .navigationBarTitleDisplayMode(.inline)
@@ -182,6 +183,7 @@ struct ManualAddCardSheet: View {
                     TextField(L("wallet_card_name"), text: $cardName)
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("wallet_add_manually"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -278,6 +280,7 @@ struct ScanCardIDSheet: View {
                     }
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("wallet_scan_card"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -360,6 +363,7 @@ struct EditCardSheet: View {
                     TextField(L("wallet_card_name"), text: $cardName)
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("edit_card"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -531,6 +535,7 @@ struct AppleWalletCardDetailView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(card.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -887,6 +892,7 @@ struct ImportDefaultCardSheet: View {
                     }
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("wallet_import_default_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

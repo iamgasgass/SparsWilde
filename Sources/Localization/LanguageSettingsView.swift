@@ -104,6 +104,7 @@ struct LanguageSettingsView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .navigationTitle(L("settings_language"))
         .navigationBarTitleDisplayMode(.inline)
         .alert(L("alert_error"), isPresented: $showErrorAlert) {

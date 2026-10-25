@@ -142,6 +142,7 @@ struct ContentView: View {
                 statusSection
                 tweaksSection
             }
+            .liquidGlassScreenStyle()
             .headerProminence(.increased)
             .navigationTitle("SparsWilde")
             .navigationDestination(for: String.self) { route in
@@ -1211,6 +1212,7 @@ struct StatusSheet: View {
                     .tint(pairingFileLoaded ? .red : .accentColor)
                 }
             }
+            .liquidGlassScreenStyle()
             .headerProminence(.increased)
             .navigationTitle(L("system_status"))
             .toolbar {
@@ -1247,6 +1249,7 @@ struct ApplySheet: View {
                 }
                 actionsSection
             }
+            .liquidGlassScreenStyle()
             .headerProminence(.increased)
             .navigationTitle(L("apply_tweaks"))
             .toolbar {

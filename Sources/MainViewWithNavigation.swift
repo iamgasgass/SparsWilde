@@ -141,6 +141,7 @@ struct ApplyTabView: View {
                 statusSection
                 applyButtonSection
             }
+            .liquidGlassScreenStyle()
             .headerProminence(.increased)
             .navigationTitle(L("nav_apply"))
         }

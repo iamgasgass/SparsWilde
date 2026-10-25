@@ -69,6 +69,7 @@ struct ThemesUIView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle("Themes UI")
         .navigationBarTitleDisplayMode(.inline)

@@ -71,6 +71,7 @@ struct PasscodeThemeView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(L("tool_passcode_theme"))
         .navigationBarTitleDisplayMode(.inline)
@@ -249,6 +250,7 @@ struct ThemeDetailView: View {
                 }
             }
         }
+        .liquidGlassScreenStyle()
         .headerProminence(.increased)
         .navigationTitle(theme.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -330,6 +332,7 @@ struct ImportThemeSheet: View {
                     }
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("section_import_theme"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -434,6 +437,7 @@ struct ImportDefaultPasscodeSheet: View {
                     }
                 }
             }
+            .liquidGlassScreenStyle()
             .navigationTitle(L("passcode_import_default_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -602,6 +606,7 @@ struct FullPasscodePreviewSheet: View {
                     }
                 }
             }
+            .liquidGlassScreenStyle()
             .headerProminence(.increased)
             .navigationTitle(L("passcode_all_keys"))
             .navigationBarTitleDisplayMode(.inline)
