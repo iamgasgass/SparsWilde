@@ -16,10 +16,11 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    # macos-26 provides Xcode 26+ and an iOS 26 SDK for native Liquid Glass APIs.
+    # Runtime/compiler guards in LiquidGlassUI.swift preserve iOS 18+ fallbacks.
+    runs-on: macos-26
 
     env:
-      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       SCHEME: SparsWilde
       CONFIGURATION: Release
       BUILD_DIR: ${{ github.workspace }}/build
@@ -30,24 +31,46 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Xcode
+      - name: Select and verify Xcode 26+
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ ! -d "$DEVELOPER_DIR" ]; then
-            LATEST="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n 1)"
-            if [ -z "$LATEST" ]; then
-              echo "::error::No Xcode installation found in /Applications"
-              exit 1
+          SELECTED_XCODE=""
+          SELECTED_VERSION=""
+          while IFS= read -r candidate; do
+            [ -n "$candidate" ] || continue
+            candidate_developer_dir="$candidate/Contents/Developer"
+            [ -d "$candidate_developer_dir" ] || continue
+
+            version="$(DEVELOPER_DIR="$candidate_developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode / { print $2; exit }' || true)"
+            major="${version%%.*}"
+            if [[ "$major" =~ ^[0-9]+$ ]] && [ "$major" -ge 26 ]; then
+              SELECTED_XCODE="$candidate"
+              SELECTED_VERSION="$version"
+              break
             fi
-            echo "Pinned Xcode not found, falling back to $LATEST"
-            echo "DEVELOPER_DIR=$LATEST/Contents/Developer" >> "$GITHUB_ENV"
-            export DEVELOPER_DIR="$LATEST/Contents/Developer"
+          done < <(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort)
+
+          if [ -z "$SELECTED_XCODE" ]; then
+            echo "::error::SparsWilde uses native iOS 26 Liquid Glass APIs and requires Xcode 26 or later. Install/select Xcode 26+ on this runner."
+            find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V || true
+            exit 1
           fi
 
+          DEVELOPER_DIR="$SELECTED_XCODE/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          export DEVELOPER_DIR
+
+          echo "Selected Xcode $SELECTED_VERSION at $SELECTED_XCODE"
           xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-version
+          SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "iOS SDK: $SDK_VERSION"
+          SDK_MAJOR="${SDK_VERSION%%.*}"
+          if [[ ! "$SDK_MAJOR" =~ ^[0-9]+$ ]] || [ "$SDK_MAJOR" -lt 26 ]; then
+            echo "::error::iOS 26 SDK or later is required for native Liquid Glass. Found SDK $SDK_VERSION"
+            exit 1
+          fi
 
       - name: Locate Xcode project
         shell: bash
