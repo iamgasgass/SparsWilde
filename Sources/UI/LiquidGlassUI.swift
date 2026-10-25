@@ -23,11 +23,17 @@ struct AdaptiveLiquidGlassAppStyle: ViewModifier {
 private struct AdaptiveLiquidGlassDefaultButtonStyle: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
+        // Xcode 16.x ships an SDK that does not declare the iOS 26 glass styles.
+        // A runtime #available check alone cannot make unknown SDK symbols compile.
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             content.buttonStyle(.glass)
         } else {
             content.buttonStyle(.bordered)
         }
+        #else
+        content.buttonStyle(.bordered)
+        #endif
     }
 }
 
@@ -74,6 +80,7 @@ struct AdaptiveLiquidGlassButtonStyle: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             if prominent {
                 content.buttonStyle(.glassProminent)
@@ -83,6 +90,11 @@ struct AdaptiveLiquidGlassButtonStyle: ViewModifier {
         } else {
             content.buttonStyle(.plain)
         }
+        #else
+        // Xcode 16.x / iOS 18 SDK fallback. Native glass remains enabled
+        // when built with Xcode 26 or newer and run on iOS 26 or newer.
+        content.buttonStyle(.plain)
+        #endif
     }
 }
 
@@ -122,6 +134,7 @@ struct AdaptiveLiquidGlassSurface: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             if interactive {
                 content.glassEffect(.regular.interactive(), in: shape)
@@ -129,26 +142,34 @@ struct AdaptiveLiquidGlassSurface: ViewModifier {
                 content.glassEffect(.regular, in: shape)
             }
         } else {
-            content
-                .background(
-                    reduceTransparency
-                        ? AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground))
-                        : AnyShapeStyle(.ultraThinMaterial),
-                    in: shape
-                )
-                .overlay {
-                    shape.strokeBorder(
-                        Color.primary.opacity(reduceTransparency ? 0.13 : 0.075),
-                        lineWidth: 0.75
-                    )
-                }
-                .shadow(
-                    color: Color.black.opacity(reduceTransparency ? 0.025 : 0.055),
-                    radius: 12,
-                    x: 0,
-                    y: 5
-                )
+            fallbackSurface(for: content)
         }
+        #else
+        // These APIs are not present in the iOS 18 SDK shipped with Xcode 16.4.
+        fallbackSurface(for: content)
+        #endif
+    }
+
+    private func fallbackSurface(for content: Content) -> some View {
+        content
+            .background(
+                reduceTransparency
+                    ? AnyShapeStyle(Color(uiColor: .secondarySystemGroupedBackground))
+                    : AnyShapeStyle(.ultraThinMaterial),
+                in: shape
+            )
+            .overlay {
+                shape.strokeBorder(
+                    Color.primary.opacity(reduceTransparency ? 0.13 : 0.075),
+                    lineWidth: 0.75
+                )
+            }
+            .shadow(
+                color: Color.black.opacity(reduceTransparency ? 0.025 : 0.055),
+                radius: 12,
+                x: 0,
+                y: 5
+            )
     }
 }
 
@@ -165,6 +186,7 @@ struct AdaptiveLiquidGlassContainer<Content: View>: View {
 
     @ViewBuilder
     var body: some View {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             GlassEffectContainer(spacing: spacing) {
                 content
@@ -172,6 +194,10 @@ struct AdaptiveLiquidGlassContainer<Content: View>: View {
         } else {
             content
         }
+        #else
+        // Keep the same layout on older SDKs, without referencing an unknown type.
+        content
+        #endif
     }
 }
 
