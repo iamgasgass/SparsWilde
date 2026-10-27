@@ -273,7 +273,8 @@ struct ApplyTabView: View {
                 store: toolStore,
                 walletStore: walletStore,
                 themeStore: themeStore,
-                featureFlagsStore: featureFlagsStore
+                featureFlagsStore: featureFlagsStore,
+                nuggetTweakStore: nuggetTweakStore
             )
 
             if case .success = toolRunner.state {
