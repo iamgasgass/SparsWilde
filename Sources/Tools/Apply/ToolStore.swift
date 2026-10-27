@@ -15,6 +15,9 @@ final class ToolStore: ObservableObject {
     
     // Themes UI
     @AppStorage("ThemesUIEnabled") var themesUIEnabled: Bool = false
+
+    // Nugget-style SpringBoard / internal / risky system plist tweaks
+    @AppStorage("NuggetSystemTweaksEnabled") var systemTweaksEnabled: Bool = false
     
     // zPatch Custom
     @AppStorage("zPatchCustomEnabled") var zPatchCustomEnabled: Bool = false

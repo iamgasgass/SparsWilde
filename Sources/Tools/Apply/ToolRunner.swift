@@ -31,8 +31,9 @@ final class ToolRunner: ObservableObject {
         let hasPasscodeTheme = themeStore.passcodeThemeEnabled
         let hasThemesUI = store.themesUIEnabled
         let hasFeatureFlags = featureFlagsStore.featureFlagsEnabled
+        let hasSystemTweaks = store.systemTweaksEnabled && NuggetSystemTweaksStore.hasSelectedTweaks
         
-        if !hasDisableSound && !hasMobileGestalt && !hasZPatchCustom && !hasAppleWallet && !hasPasscodeTheme && !hasThemesUI && !hasFeatureFlags {
+        if !hasDisableSound && !hasMobileGestalt && !hasZPatchCustom && !hasAppleWallet && !hasPasscodeTheme && !hasThemesUI && !hasFeatureFlags && !hasSystemTweaks {
             state = .failed(message: "No tools enabled.")
             return
         }
@@ -47,6 +48,7 @@ final class ToolRunner: ObservableObject {
         if hasPasscodeTheme { enabledToolNames.append("Passcode Theme") }
         if hasThemesUI { enabledToolNames.append("Themes UI") }
         if hasFeatureFlags { enabledToolNames.append("Feature Flags") }
+        if hasSystemTweaks { enabledToolNames.append("Nugget-style System Tweaks") }
         
         log("Apply started. Enabled tools: \(enabledToolNames.joined(separator: ", "))")
 
@@ -109,7 +111,18 @@ final class ToolRunner: ObservableObject {
                 allFiles.append(contentsOf: featureFlagsFiles)
                 log("Collected \(featureFlagsFiles.count) file(s) from Feature Flags")
             }
-            
+
+            if hasSystemTweaks {
+                state = .running(toolName: "Nugget-style System Tweaks")
+                log("Collecting files from: Nugget-style System Tweaks")
+                let systemTweakFiles = try NuggetSystemTweaksStore.makeBookRestoreFiles()
+                allFiles.append(contentsOf: systemTweakFiles)
+                log("Collected \(systemTweakFiles.count) system plist file(s)")
+            }
+
+            // Merge repeated plist targets (for example GlobalPreferences from Themes UI and internal tweaks).
+            allFiles = try mergeDuplicatePlistTargets(allFiles)
+
             // Apply all files together using unified BookRestore task
             state = .running(toolName: "Applying files")
             log("Applying \(allFiles.count) file(s) via BookRestore...")
@@ -133,6 +146,72 @@ final class ToolRunner: ObservableObject {
 
     // MARK: - File Collection
     
+    /// Merge repeated plist destinations so independently selected tweaks do not overwrite one another.
+    private func mergeDuplicatePlistTargets(_ files: [BookRestoreFile]) throws -> [BookRestoreFile] {
+        var merged: [BookRestoreFile] = []
+        var indexByPath: [String: Int] = [:]
+
+        func mergeDictionaries(_ base: [String: Any], _ addition: [String: Any]) -> [String: Any] {
+            var result = base
+            for (key, value) in addition {
+                if let oldChild = result[key] as? [String: Any],
+                   let newChild = value as? [String: Any] {
+                    result[key] = mergeDictionaries(oldChild, newChild)
+                } else {
+                    result[key] = value
+                }
+            }
+            return result
+        }
+
+        for file in files {
+            guard let existingIndex = indexByPath[file.targetPath] else {
+                indexByPath[file.targetPath] = merged.count
+                merged.append(file)
+                continue
+            }
+
+            let existing = merged[existingIndex]
+            guard let oldData = existing.contents,
+                  let newData = file.contents,
+                  !oldData.isEmpty,
+                  !newData.isEmpty else {
+                // Empty-file actions such as Screen Time plist clearing are intentionally kept as the final operation.
+                merged[existingIndex] = file
+                log("Repeated target \(file.targetPath): using the later file payload because one action intentionally has empty contents")
+                continue
+            }
+
+            let oldPropertyList = try? PropertyListSerialization.propertyList(from: oldData, options: [], format: nil)
+            let newPropertyList = try? PropertyListSerialization.propertyList(from: newData, options: [], format: nil)
+            guard let oldObject = oldPropertyList as? [String: Any],
+                  let newObject = newPropertyList as? [String: Any] else {
+                merged[existingIndex] = file
+                log("Repeated target \(file.targetPath): using the later payload because contents are not dictionary plists")
+                continue
+            }
+
+            let combined = mergeDictionaries(oldObject, newObject)
+            let combinedData = try PropertyListSerialization.data(fromPropertyList: combined, format: .xml, options: 0)
+            switch existing.fileType {
+            case .sound:
+                merged[existingIndex] = .sound(targetPath: existing.targetPath, localFileName: existing.localFileName ?? (existing.targetPath as NSString).lastPathComponent)
+            case .mobileGestalt:
+                merged[existingIndex] = .mobileGestalt(targetPath: existing.targetPath, contents: combinedData)
+            case .custom:
+                merged[existingIndex] = .custom(targetPath: existing.targetPath, contents: combinedData)
+            case .walletImage:
+                merged[existingIndex] = .walletImage(targetPath: existing.targetPath, contents: combinedData, mediaFileName: existing.localFileName ?? (existing.targetPath as NSString).lastPathComponent)
+            case .featureFlags:
+                merged[existingIndex] = .featureFlags(targetPath: existing.targetPath, contents: combinedData)
+            case .placeholder:
+                merged[existingIndex] = .custom(targetPath: existing.targetPath, contents: combinedData)
+            }
+            log("Merged duplicate plist target: \(file.targetPath)")
+        }
+        return merged
+    }
+
     /// Collect files for DisableSound tool
     private func collectDisableSoundFiles() throws -> [BookRestoreFile] {
         return [
@@ -163,6 +242,23 @@ final class ToolRunner: ObservableObject {
         var files: [BookRestoreFile] = [
             .mobileGestalt(targetPath: targetPath, contents: mgData)
         ]
+
+        // The MobileGestalt Apple Intelligence switch also needs the eligibility plist and Siri feature flags.
+        // Earlier builds loaded these resources in the UI but never included them in the actual restore payload.
+        if let mgDictionary = try? PropertyListSerialization.propertyList(from: mgData, options: [], format: nil) as? [String: Any],
+           let cacheExtra = mgDictionary["CacheExtra"] as? [String: Any],
+           (cacheExtra["A62OafQ85EJAiiqKn4agtg"] as? Int) == 1 {
+            if let eligibilityURL = Bundle.main.url(forResource: "eligibility", withExtension: "plist") {
+                let sourceData = try Data(contentsOf: eligibilityURL)
+                let eligibilityData = try makeEligibilityPayload(sourceData: sourceData)
+                files.append(.custom(targetPath: "/var/db/eligibilityd/eligibility.plist", contents: eligibilityData))
+            }
+            if let siriFlagsURL = Bundle.main.url(forResource: "FeatureFlags_Global", withExtension: "plist") {
+                let siriFlagsData = try Data(contentsOf: siriFlagsURL)
+                files.append(.featureFlags(targetPath: ObfuscatedPaths.featureFlags, contents: siriFlagsData))
+                files.append(.featureFlags(targetPath: "/var/preferences/FeatureFlags/Placeholder", contents: Data()))
+            }
+        }
         
         // Add Resolution.plist if it exists (for RDAR fix)
         let resolutionURL = docs.appendingPathComponent("Resolution.plist")
@@ -175,6 +271,29 @@ final class ToolRunner: ObservableObject {
         return files
     }
     
+    /// Generates the Apple Intelligence eligibility payload, preserving the bundled
+    /// eligibility keys while optionally adding the user's selected supported language.
+    private func makeEligibilityPayload(sourceData: Data) throws -> Data {
+        guard var root = try PropertyListSerialization.propertyList(from: sourceData, options: [], format: nil) as? [String: Any] else {
+            throw ToolTaskError.generic("The bundled Apple Intelligence eligibility plist is not a dictionary.")
+        }
+
+        let selectedLanguage = UserDefaults.standard.string(forKey: "AppleIntelligenceEligibilityLanguage") ?? "en"
+        var languageList = ["en"]
+        if !selectedLanguage.isEmpty && selectedLanguage != "en" {
+            languageList.append(selectedLanguage)
+        }
+
+        if var greyMatter = root["OS_ELIGIBILITY_DOMAIN_GREYMATTER"] as? [String: Any],
+           var context = greyMatter["context"] as? [String: Any] {
+            context["OS_ELIGIBILITY_CONTEXT_ELIGIBLE_DEVICE_LANGUAGES"] = languageList
+            greyMatter["context"] = context
+            root["OS_ELIGIBILITY_DOMAIN_GREYMATTER"] = greyMatter
+        }
+
+        return try PropertyListSerialization.data(fromPropertyList: root, format: .xml, options: 0)
+    }
+
     /// Collect files for zPatch Custom tool
     private func collectZPatchCustomFiles() throws -> [BookRestoreFile] {
         // Load patches from UserDefaults

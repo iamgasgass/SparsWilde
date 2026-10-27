@@ -25,6 +25,12 @@ It operates as a standalone on-device application, functioning independently lik
 
 ---
 
+## Nugget-inspired system tweak catalog
+
+SparsWilde includes an opt-in **Nugget-style System Tweaks** screen for preference and feature-flag payloads that can be expressed through the app's existing BookRestore flow. This is not a full port of Nugget: payloads that require direct SpringBoard injection, StatusBar API calls, additional eligibility configuration assets, or a live merge of aggregate system plists are not exposed as if they were guaranteed to work.
+
+The catalog includes SpringBoard and internal preference overrides, Liquid Glass/Solarium preference overrides, selected FeatureFlags presets, MobileGestalt capability toggles, device/hardware identifier fields, and experimental canvas dimensions. Many keys are private and version-dependent; applying a plist does not guarantee iOS will honor the key. High-risk choices are opt-in and display warnings. Back up the device before applying system changes.
+
 ## Usage Guides
 
 ### Apple Wallet Background Guide

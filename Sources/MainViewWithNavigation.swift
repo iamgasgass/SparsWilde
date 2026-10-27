@@ -130,6 +130,7 @@ struct ApplyTabView: View {
         if toolStore.themesUIEnabled { list.append((L("tool_themes_ui"), "paintbrush")) }
         if toolStore.zPatchCustomEnabled { list.append((L("tool_zpatch_custom"), "wrench.and.screwdriver")) }
         if featureFlagsStore.featureFlagsEnabled { list.append((L("tool_feature_flags"), "flag")) }
+        if toolStore.systemTweaksEnabled && NuggetSystemTweaksStore.hasSelectedTweaks { list.append((L("tool_system_tweaks"), "slider.horizontal.3")) }
         return list
     }
 

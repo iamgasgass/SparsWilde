@@ -3,23 +3,6 @@ import UniformTypeIdentifiers
 
 struct MobileGestaltView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
-
-    // Medusa capability keys used for Stage Manager multitasking without spoofing
-    // the device as an iPad. This intentionally does not include the iPad key and
-    // never changes CacheData / DeviceClassNumber.
-    private static let ipadCapabilityKey = "uKc7FPnEO++lVhHWHFlGbQ"
-    // Stage Manager's public-facing MobileGestalt capability is separate from
-    // the additional Medusa window capabilities. Keep these separate so the
-    // user can enable the native Stage Manager setting without spoofing iPad.
-    private static let stageManagerCapabilityKey = "qeaj75wk3HF4DwQ8qbIi7g" // DeviceSupportsEnhancedMultitasking
-    private static let medusaWindowCapabilityKeys = [
-        "mG0AnH/Vy1veoqoLRAIgTA", // MedusaFloatingLiveAppCapability
-        "UCG5MkVahJxG1YULbbd5Bg", // MedusaOverlayAppCapability
-        "ZYqko/XM5zD3XBfN5RmaXA", // MedusaPinnedAppCapability
-        "nVh/gwNpy7Jv1NOk00CMrw", // MedusaPIPCapability
-    ]
-    private static let medusaCapabilityKeys = [stageManagerCapabilityKey] + medusaWindowCapabilityKeys
-
     let origMGURL, modMGURL, featFlagsURL, resolutionURL: URL
     @Environment(\.scenePhase) var scenePhase
     @ObservedObject var toolStore: ToolStore
@@ -39,8 +22,14 @@ struct MobileGestaltView: View {
     @State var enableRdarFix: Bool = false
     @State var enableModelName: Bool = false
     @State var modelName: String = ""
-    @State private var medusaOnlyModeEnabled = false
-    @State private var fullIPadModeEnabled = false
+    @State var hardwareType: String = ""
+    @State var cpuType: String = ""
+    @State var originalHardwareType: String = ""
+    @State var originalCPUType: String = ""
+    @AppStorage("SparsWildeCustomResolutionEnabled") private var customResolutionEnabled = false
+    @AppStorage("AppleIntelligenceEligibilityLanguage") private var appleIntelligenceLanguage = "en"
+    @State var customResolutionWidth: String = "1179"
+    @State var customResolutionHeight: String = "2556"
 
     var body: some View {
         GlassForm {
@@ -48,9 +37,10 @@ struct MobileGestaltView: View {
             deviceSubtypeSection
             hardwareFeaturesSection
             displayAndUISection
-            dockCompatibilitySection
             systemFeaturesSection
             advancedSection
+            spoofingSection
+            resolutionSection
             saveResetSection
         }
         .liquidGlassScreenStyle()
@@ -70,11 +60,13 @@ struct MobileGestaltView: View {
                 return
             }
 
-            refreshMultitaskingModeState()
-
             if let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary {
                 productType = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String ?? productType
-                
+                let originalGestalt = (NSDictionary(contentsOf: origMGURL)?["CacheExtra"] as? NSDictionary)
+                originalHardwareType = originalGestalt?["oYicEKzVTz4/CxxE05pEgQ"] as? String ?? ""
+                originalCPUType = originalGestalt?["5pYKlGnYYBzGvAlIU8RjEQ"] as? String ?? ""
+                hardwareType = cacheExtra["oYicEKzVTz4/CxxE05pEgQ"] as? String ?? originalHardwareType
+                cpuType = cacheExtra["5pYKlGnYYBzGvAlIU8RjEQ"] as? String ?? originalCPUType
                 // Load Dynamic Island setting
                 if let diValue = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSDictionary,
                    let subtype = diValue["ArtworkDeviceSubType"] as? Int {
@@ -185,31 +177,16 @@ struct MobileGestaltView: View {
     private var displayAndUISection: some View {
         GlassSection(header: Text(L("section_display_and_ui"))) {
             Toggle(L("mg_disable_parallax"), isOn: bindingForMGKeys(["UIParallaxCapability"], type: Int.self, defaultValue: 1, enableValue: 0))
-
-            Toggle(L("mg_stage_manager_iphone_ui"), isOn: bindingForStageManager())
-                .disabled(fullIPadModeEnabled)
-            Toggle(L("mg_medusa_window_capabilities"), isOn: bindingForMedusaWindows())
-                .disabled(fullIPadModeEnabled)
-            Text(L("mg_stage_manager_iphone_ui_desc"))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-
+            Toggle(L("mg_supports_dynamic_island"), isOn: bindingForMGKeys(["YlEtTtHlNesRBMal1CqRaA"]))
+            Toggle(L("mg_stage_manager"), isOn: bindingForMGKeys(["qeaj75wk3HF4DwQ8qbIi7g"]))
+            Toggle(L("mg_medusa_multitasking"), isOn: bindingForMedusa())
+                .disabled((mobileGestalt["CacheExtra"] as? NSDictionary)?["uKc7FPnEO++lVhHWHFlGbQ"] as? Int == 1)
+            Toggle(L("mg_enable_lglpm"), isOn: bindingForMGKeys(["SAGvsp6O6kAQ4fEfDJpC4Q"], type: Int.self, defaultValue: 0, enableValue: 1))
+            Toggle(L("mg_disable_lglpm"), isOn: bindingForMGKeys(["SAGvsp6O6kAQ4fEfDJpC4Q"], type: Int.self, defaultValue: 1, enableValue: 0))
             Toggle(L("mg_aod"), isOn: bindingForMGKeys(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
                 .disabled(Utils.requiresVersion(18))
             Toggle(L("mg_aod_vibrancy"), isOn: bindingForMGKeys(["ykpu7qyhqFweVMKtxNylWA"]))
                 .disabled(Utils.requiresVersion(18))
-        }
-    }
-
-    @ViewBuilder
-    private var dockCompatibilitySection: some View {
-        GlassSection(header: Text(L("mg_floating_dock_setup_title"))) {
-            Label(L("mg_floating_dock_native_label"), systemImage: "square.stack.3d.up")
-            Text(L("mg_floating_dock_setup_desc"))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            Text(L("mg_floating_dock_setup_steps"))
-                .font(.footnote)
         }
     }
 
@@ -231,24 +208,116 @@ struct MobileGestaltView: View {
             Toggle(L("mg_internal_storage"), isOn: bindingForMGKeys(["LBJfwOEzExRxzlAnSuI7eg"]))
             Toggle(L("mg_internal_stuff"), isOn: bindingForInternalStuff())
             Toggle(L("mg_security_research"), isOn: bindingForMGKeys(["XYlJKKkj2hztRP1NWWnhlw"]))
-            Toggle(L("mg_metal_hud"), isOn: bindingForMGKeys(["EqrsVvjcYDdxHBiQmGhAWw"]))
+            Toggle(L("mg_internal_install"), isOn: bindingForMGKeys(["EqrsVvjcYDdxHBiQmGhAWw"]))
             Toggle(L("mg_apple_intelligence"), isOn: bindingForAppleIntelligence())
                 .disabled(Utils.requiresVersion(18))
-            GlassMenuPicker(L("mg_device_model"), selection: $productType) {
-                Text(L("mg_device_model_unchanged")).tag(MobileGestaltView.machineName())
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    Text("iPad Pro 11 inch 5th Gen").tag("iPad16,3")
-                } else {
-                    Text("iPhone 15 Pro Max").tag("iPhone16,2")
-                    Text("iPhone 16 Pro Max").tag("iPhone17,2")
+            if ((mobileGestalt["CacheExtra"] as? NSDictionary)?["A62OafQ85EJAiiqKn4agtg"] as? Int) == 1 {
+                Picker(L("mg_ai_eligibility_language"), selection: $appleIntelligenceLanguage) {
+                    Text("English").tag("en")
+                    Text("Italiano").tag("it")
+                    Text("Français").tag("fr")
+                    Text("Deutsch").tag("de")
+                    Text("Español").tag("es")
+                    Text("Português").tag("pt")
+                    Text("中文").tag("zh")
+                    Text("日本語").tag("ja")
+                    Text("한국어").tag("ko")
                 }
+                Text(L("mg_ai_eligibility_language_note"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary
-            Toggle(L("mg_become_ipados"), isOn: bindingForTrollPad())
-                .disabled(cacheExtra?["+3Uf0Pm5F8Xy7Onyvko0vA"] as? String != "iPhone" || medusaOnlyModeEnabled)
-            Text(L("mg_ipados_warning"))
+            Toggle("Become iPadOS", isOn: bindingForTrollPad())
+                .disabled(cacheExtra?["+3Uf0Pm5F8Xy7Onyvko0vA"] as? String != "iPhone")
+        }
+    }
+
+    @ViewBuilder
+    private var spoofingSection: some View {
+        GlassSection(header: Text(L("section_device_spoofing"))) {
+            Text(L("mg_device_model_warning"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+
+            GlassMenuPicker(L("mg_device_model"), selection: $productType) {
+                Text(L("mg_device_model_unchanged")).tag(MobileGestaltView.machineName())
+                Text("iPhone 15 Pro").tag("iPhone16,1")
+                Text("iPhone 15 Pro Max").tag("iPhone16,2")
+                Text("iPhone 16").tag("iPhone17,3")
+                Text("iPhone 16 Plus").tag("iPhone17,4")
+                Text("iPhone 16 Pro").tag("iPhone17,1")
+                Text("iPhone 16 Pro Max").tag("iPhone17,2")
+                Text("iPhone 17").tag("iPhone18,3")
+                Text("iPad mini (A17 Pro, Wi-Fi)").tag("iPad16,1")
+                Text("iPad mini (A17 Pro, Cellular)").tag("iPad16,2")
+                Text("iPad Pro 11-inch (M4, Wi-Fi)").tag("iPad16,3")
+                Text("iPad Pro 11-inch (M4, Cellular)").tag("iPad16,4")
+                Text("iPad Pro 13-inch (M4, Wi-Fi)").tag("iPad16,5")
+                Text("iPad Pro 13-inch (M4, Cellular)").tag("iPad16,6")
+                let knownModels: Set<String> = ["iPhone16,1", "iPhone16,2", "iPhone17,3", "iPhone17,4", "iPhone17,1", "iPhone17,2", "iPhone18,3", "iPad16,1", "iPad16,2", "iPad16,3", "iPad16,4", "iPad16,5", "iPad16,6"]
+                if !productType.isEmpty && productType != MobileGestaltView.machineName() && !knownModels.contains(productType) {
+                    Text("Current identifier (\(productType))").tag(productType)
+                }
+            }
+
+            GlassMenuPicker(L("mg_hardware_identifier"), selection: $hardwareType) {
+                if !originalHardwareType.isEmpty { Text("Original (\(originalHardwareType))").tag(originalHardwareType) }
+                else { Text(L("mg_spoof_not_set")).tag("") }
+                Text("iPhone 15 Pro (D83AP)").tag("D83AP")
+                Text("iPhone 15 Pro Max (D84AP)").tag("D84AP")
+                Text("iPhone 16 (D47AP)").tag("D47AP")
+                Text("iPhone 16 Plus (D48AP)").tag("D48AP")
+                Text("iPhone 16 Pro (D93AP)").tag("D93AP")
+                Text("iPhone 16 Pro Max (D94AP)").tag("D94AP")
+                Text("iPhone 17 (V57AP)").tag("V57AP")
+                Text("iPad mini A17 Pro Wi-Fi (J410AP)").tag("J410AP")
+                Text("iPad mini A17 Pro Cellular (J411AP)").tag("J411AP")
+                Text("iPad Pro M4 13-inch Wi-Fi (J720AP)").tag("J720AP")
+                Text("iPad Pro M4 13-inch Cellular (J721AP)").tag("J721AP")
+                Text("iPad Pro M4 11-inch Wi-Fi (J717AP)").tag("J717AP")
+                Text("iPad Pro M4 11-inch Cellular (J718AP)").tag("J718AP")
+                let knownHardware: Set<String> = ["D83AP", "D84AP", "D47AP", "D48AP", "D93AP", "D94AP", "V57AP", "J410AP", "J411AP", "J720AP", "J721AP", "J717AP", "J718AP"]
+                if !hardwareType.isEmpty && !knownHardware.contains(hardwareType) && hardwareType != originalHardwareType {
+                    Text("Current identifier (\(hardwareType))").tag(hardwareType)
+                }
+            }
+
+            GlassMenuPicker(L("mg_cpu_identifier"), selection: $cpuType) {
+                if !originalCPUType.isEmpty { Text("Original (\(originalCPUType))").tag(originalCPUType) }
+                else { Text(L("mg_spoof_not_set")).tag("") }
+                Text("A17 Pro / A18 Pro family (t8130)").tag("t8130")
+                Text("A18 family (t8140)").tag("t8140")
+                Text("A19 family (t8150)").tag("t8150")
+                Text("M4 family (t8182)").tag("t8182")
+                Text("M2 family (t8112)").tag("t8112")
+                Text("M1 family (t8103)").tag("t8103")
+                let knownCPUs: Set<String> = ["t8130", "t8140", "t8150", "t8182", "t8112", "t8103"]
+                if !cpuType.isEmpty && !knownCPUs.contains(cpuType) && cpuType != originalCPUType {
+                    Text("Current identifier (\(cpuType))").tag(cpuType)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var resolutionSection: some View {
+        GlassSection(header: Text(L("mg_custom_resolution"))) {
+            Toggle(L("mg_custom_resolution_enable"), isOn: $customResolutionEnabled)
+            HStack {
+                TextField(L("mg_resolution_width"), text: $customResolutionWidth)
+                    .keyboardType(.numberPad)
+                    .liquidGlassField()
+                TextField(L("mg_resolution_height"), text: $customResolutionHeight)
+                    .keyboardType(.numberPad)
+                    .liquidGlassField()
+            }
+            .disabled(!customResolutionEnabled)
+            Text(L("mg_custom_resolution_warning"))
+                .font(.footnote)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -258,6 +327,7 @@ struct MobileGestaltView: View {
             Button(action: {
                 do {
                     saveProductType()
+                    saveSpoofIdentifiers()
                     try mobileGestalt.write(to: modMGURL)
                     
                     // Save resolution plist for RDAR fix
@@ -281,7 +351,10 @@ struct MobileGestaltView: View {
                     try? FileManager.default.removeItem(at: modMGURL)
                     try FileManager.default.copyItem(at: origMGURL, to: modMGURL)
                     mobileGestalt = try NSMutableDictionary(contentsOf: modMGURL, error: ())
-                    refreshMultitaskingModeState()
+                    productType = MobileGestaltView.machineName()
+                    hardwareType = originalHardwareType
+                    cpuType = originalCPUType
+                    customResolutionEnabled = false
                     toolStore.replaceMobileGestaltEnabled = true
                     
                     if wasTrollPadEnabled {
@@ -358,92 +431,32 @@ struct MobileGestaltView: View {
         )
     }
     
-    /// Toggles only DeviceSupportsEnhancedMultitasking. This follows the
-    /// MobileGestalt-based method used by the project and does not spoof iPadOS.
-    func bindingForStageManager() -> Binding<Bool> {
+    func bindingForMedusa() -> Binding<Bool> {
         guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
             return State(initialValue: false).projectedValue
         }
-
-        let key = Self.stageManagerCapabilityKey
-        return Binding(
-            get: { (cacheExtra[key] as? NSNumber)?.boolValue ?? false },
-            set: { enabled in
-                let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
-                guard !enabled || !isFullIPadMode else {
-                    refreshMultitaskingModeState()
-                    return
-                }
-
-                if enabled {
-                    cacheExtra[key] = 1
-                } else {
-                    restoreOriginalCacheExtraValue(key, in: cacheExtra)
-                }
-                refreshMultitaskingModeState()
-            }
-        )
-    }
-
-    /// Toggles the four auxiliary Medusa window capabilities independently of
-    /// Stage Manager itself. These flags alone do not install a SpringBoard tweak.
-    func bindingForMedusaWindows() -> Binding<Bool> {
-        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
-            return State(initialValue: false).projectedValue
-        }
-
-        let keys = Self.medusaWindowCapabilityKeys
+        let keys = [
+            "mG0AnH/Vy1veoqoLRAIgTA", // MedusaFloatingLiveAppCapability
+            "UCG5MkVahJxG1YULbbd5Bg", // MedusaOverlayAppCapability
+            "ZYqko/XM5zD3XBfN5RmaXA", // MedusaPinnedAppCapability
+            "nVh/gwNpy7Jv1NOk00CMrw", // MedusaPIPCapability
+            "qeaj75wk3HF4DwQ8qbIi7g", // DeviceSupportsEnhancedMultitasking
+        ]
         return Binding(
             get: {
-                keys.allSatisfy { (cacheExtra[$0] as? NSNumber)?.boolValue == true }
+                if let value = cacheExtra[keys.first!] as? Int? { return value == 1 }
+                return false
             },
             set: { enabled in
-                let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
-                guard !enabled || !isFullIPadMode else {
-                    refreshMultitaskingModeState()
-                    return
-                }
-
                 for key in keys {
                     if enabled {
                         cacheExtra[key] = 1
                     } else {
-                        restoreOriginalCacheExtraValue(key, in: cacheExtra)
+                        cacheExtra.removeObject(forKey: key)
                     }
                 }
-                refreshMultitaskingModeState()
             }
         )
-    }
-
-    /// Restore a key to the original MobileGestalt value rather than blindly
-    /// deleting it. This preserves existing false/zero values and non-integer types.
-    private func restoreOriginalCacheExtraValue(_ key: String, in cacheExtra: NSMutableDictionary) {
-        let originalRoot = NSDictionary(contentsOf: origMGURL)
-        let originalCacheExtra = originalRoot?["CacheExtra"] as? NSDictionary
-        if let originalValue = originalCacheExtra?[key] {
-            cacheExtra[key] = originalValue
-        } else {
-            cacheExtra.removeObject(forKey: key)
-        }
-    }
-
-    /// Recomputes UI state from the in-memory plist. Become iPadOS is locked out
-    /// whenever the selective Stage Manager/Medusa profile is active.
-    private func refreshMultitaskingModeState() {
-        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
-            medusaOnlyModeEnabled = false
-            fullIPadModeEnabled = false
-            return
-        }
-
-        let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
-        fullIPadModeEnabled = isFullIPadMode
-        let stageManagerEnabled = (cacheExtra[Self.stageManagerCapabilityKey] as? NSNumber)?.boolValue == true
-        let anyMedusaWindowCapability = Self.medusaWindowCapabilityKeys.contains {
-            (cacheExtra[$0] as? NSNumber)?.boolValue == true
-        }
-        medusaOnlyModeEnabled = !isFullIPadMode && (stageManagerEnabled || anyMedusaWindowCapability)
     }
 
     func bindingForRegionRestriction() -> Binding<Bool> {
@@ -492,11 +505,19 @@ struct MobileGestaltView: View {
         }
         let valueOffset = FindCacheDataOffset("mtrAoWJ3gsq+I90ZnQ0vQw")
 
-        let keys = [Self.ipadCapabilityKey] + Self.medusaCapabilityKeys
+        let keys = [
+            "uKc7FPnEO++lVhHWHFlGbQ", // ipad
+            "mG0AnH/Vy1veoqoLRAIgTA", // MedusaFloatingLiveAppCapability
+            "UCG5MkVahJxG1YULbbd5Bg", // MedusaOverlayAppCapability
+            "ZYqko/XM5zD3XBfN5RmaXA", // MedusaPinnedAppCapability
+            "nVh/gwNpy7Jv1NOk00CMrw", // MedusaPIPCapability
+            "qeaj75wk3HF4DwQ8qbIi7g", // DeviceSupportsEnhancedMultitasking
+        ]
 
         return Binding(
             get: {
-                return (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
+                if let value = cacheExtra[keys.first!] as? Int? { return value == 1 }
+                return false
             },
             set: { enabled in
                 cacheData.mutableBytes.storeBytes(of: enabled ? 3 : 1, toByteOffset: valueOffset, as: Int.self)
@@ -507,7 +528,6 @@ struct MobileGestaltView: View {
                         cacheExtra.removeObject(forKey: key)
                     }
                 }
-                refreshMultitaskingModeState()
             }
         )
     }
@@ -546,8 +566,28 @@ struct MobileGestaltView: View {
     }
 
     func saveProductType() {
-        let cacheExtra = mobileGestalt["CacheExtra"] as! NSMutableDictionary
-        cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] = productType
+        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else { return }
+        if productType.isEmpty || productType == Self.machineName() {
+            cacheExtra.removeObject(forKey: "h9jDsbgj7xIVeIQ8S3/X3Q")
+        } else {
+            cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] = productType
+        }
+    }
+
+    func saveSpoofIdentifiers() {
+        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else { return }
+        if hardwareType.isEmpty {
+            if !originalHardwareType.isEmpty { cacheExtra["oYicEKzVTz4/CxxE05pEgQ"] = originalHardwareType }
+            else { cacheExtra.removeObject(forKey: "oYicEKzVTz4/CxxE05pEgQ") }
+        } else {
+            cacheExtra["oYicEKzVTz4/CxxE05pEgQ"] = hardwareType
+        }
+        if cpuType.isEmpty {
+            if !originalCPUType.isEmpty { cacheExtra["5pYKlGnYYBzGvAlIU8RjEQ"] = originalCPUType }
+            else { cacheExtra.removeObject(forKey: "5pYKlGnYYBzGvAlIU8RjEQ") }
+        } else {
+            cacheExtra["5pYKlGnYYBzGvAlIU8RjEQ"] = cpuType
+        }
     }
     
     func applyDynamicIsland(type: Int) {
@@ -687,13 +727,22 @@ struct MobileGestaltView: View {
     
     /// Saves the resolution plist file for RDAR fix
     func saveResolutionPlist() throws {
-        if let resolution = calculateResolution() {
-            // Create the resolution plist with canvas_width and canvas_height
+        let resolution: (width: Int, height: Int)?
+        if customResolutionEnabled {
+            guard let width = Int(customResolutionWidth), let height = Int(customResolutionHeight),
+                  (320...5000).contains(width), (480...8000).contains(height) else {
+                throw ToolTaskError.generic("Custom resolution values are invalid. Width must be 320–5000 and height 480–8000 pixels.")
+            }
+            resolution = (width, height)
+        } else {
+            resolution = calculateResolution()
+        }
+
+        if let resolution {
             let resolutionDict: NSDictionary = [
                 "canvas_width": resolution.width,
                 "canvas_height": resolution.height
             ]
-            
             try resolutionDict.write(to: resolutionURL)
             chmod(resolutionURL.path, 0o644)
         } else {

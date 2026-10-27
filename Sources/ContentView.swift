@@ -396,6 +396,14 @@ struct ContentView: View {
             )
 
             toolNavigationLink(
+                value: "SystemTweaks",
+                title: L("tool_system_tweaks"),
+                subtitle: L("tool_system_tweaks_desc"),
+                icon: "slider.horizontal.3",
+                isEnabled: toolStore.systemTweaksEnabled
+            )
+
+            toolNavigationLink(
                 value: "zPatchCustom",
                 title: L("tool_zpatch_custom"),
                 subtitle: L("tool_zpatch_custom_desc"),
@@ -423,6 +431,8 @@ struct ContentView: View {
             zPatchCustomView()
         } else if route == "FeatureFlags" {
             FeatureFlagsView(store: featureFlagsStore)
+        } else if route == "SystemTweaks" {
+            NuggetSystemTweaksView(toolStore: toolStore)
         }
     }
 

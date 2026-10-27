@@ -88,6 +88,22 @@ enum FeatureFlagPresets {
             displayName: "AI Features",
             description: "Enable AI-related features (Domino & SuperDomino)"
         ),
+
+        // Nugget AI eligibility feature flags
+        FeatureFlag(
+            id: "ai_siri_flags",
+            category: "Siri",
+            flagNames: ["sae_override", "assistant_engine_override"],
+            displayName: "Siri assistant-engine overrides",
+            description: "Enables experimental Siri assistant-engine feature flags"
+        ),
+        FeatureFlag(
+            id: "ai_siriui_flag",
+            category: "SiriUI",
+            flagNames: ["sae"],
+            displayName: "Siri UI assistant-engine flag",
+            description: "Enables the experimental Siri UI assistant-engine feature flag"
+        ),
         
         // Kiosk Mode
         FeatureFlag(
@@ -210,7 +226,7 @@ enum FeatureFlagPresets {
                 groupName = "Lockscreen"
             } else if flag.id == "photos_ui" {
                 groupName = "Photos"
-            } else if flag.id == "ai" {
+            } else if flag.id == "ai" || flag.id == "ai_siri_flags" || flag.id == "ai_siriui_flag" {
                 groupName = "AI"
             } else {
                 groupName = "Other"
