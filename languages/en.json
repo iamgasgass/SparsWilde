@@ -437,5 +437,12 @@
   "ff_flag_solarium_sharing": "Disable Solarium (Sharing)",
   "ff_flag_solarium_mail": "Disable Solarium (Mail)",
   "mg_stage_manager_dock_iphone_ui": "Stage Manager + Dock (Keep iPhone UI)",
-  "mg_stage_manager_dock_iphone_ui_desc": "Enables the Medusa multitasking capabilities without setting the iPad device flag or changing DeviceClassNumber. Dock visibility is controlled by iOS/SpringBoard and is not guaranteed on unsupported builds; if “Show Dock in Stage Manager” is offered, keep it enabled."
+  "mg_stage_manager_dock_iphone_ui_desc": "Enables the Medusa multitasking capabilities without setting the iPad device flag or changing DeviceClassNumber. Dock visibility is controlled by iOS/SpringBoard and is not guaranteed on unsupported builds; if “Show Dock in Stage Manager” is offered, keep it enabled.",
+  "mg_stage_manager_iphone_ui": "Stage Manager capability (keep iPhone UI)",
+  "mg_medusa_window_capabilities": "Advanced Medusa window capabilities",
+  "mg_stage_manager_iphone_ui_desc": "Edits MobileGestalt capability flags only. It does not spoof iPadOS or inject code into SpringBoard. Save the plist, then use Home → Apply Enabled Tools. Stage Manager and Dock behavior varies by iOS build and device.",
+  "mg_floating_dock_setup_title": "Native Dock setup",
+  "mg_floating_dock_native_label": "Use the iOS Dock and Stage Manager controls",
+  "mg_floating_dock_setup_desc": "FloatingDockXVI-style options (hide background/separator, recents/library layout, icon counts, and forced Dock visibility) require SpringBoard runtime hooks. SparsWilde's MobileGestalt restore flow cannot apply those hooks by itself.",
+  "mg_floating_dock_setup_steps": "After applying the plist, enable Stage Manager through the iOS-supported control or a Shortcuts action, then enable Show Dock and Show Recent Apps if those options are available."
 }

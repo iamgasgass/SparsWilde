@@ -8,13 +8,17 @@ struct MobileGestaltView: View {
     // the device as an iPad. This intentionally does not include the iPad key and
     // never changes CacheData / DeviceClassNumber.
     private static let ipadCapabilityKey = "uKc7FPnEO++lVhHWHFlGbQ"
-    private static let medusaCapabilityKeys = [
+    // Stage Manager's public-facing MobileGestalt capability is separate from
+    // the additional Medusa window capabilities. Keep these separate so the
+    // user can enable the native Stage Manager setting without spoofing iPad.
+    private static let stageManagerCapabilityKey = "qeaj75wk3HF4DwQ8qbIi7g" // DeviceSupportsEnhancedMultitasking
+    private static let medusaWindowCapabilityKeys = [
         "mG0AnH/Vy1veoqoLRAIgTA", // MedusaFloatingLiveAppCapability
         "UCG5MkVahJxG1YULbbd5Bg", // MedusaOverlayAppCapability
         "ZYqko/XM5zD3XBfN5RmaXA", // MedusaPinnedAppCapability
         "nVh/gwNpy7Jv1NOk00CMrw", // MedusaPIPCapability
-        "qeaj75wk3HF4DwQ8qbIi7g", // DeviceSupportsEnhancedMultitasking / Stage Manager
     ]
+    private static let medusaCapabilityKeys = [stageManagerCapabilityKey] + medusaWindowCapabilityKeys
 
     let origMGURL, modMGURL, featFlagsURL, resolutionURL: URL
     @Environment(\.scenePhase) var scenePhase
@@ -44,6 +48,7 @@ struct MobileGestaltView: View {
             deviceSubtypeSection
             hardwareFeaturesSection
             displayAndUISection
+            dockCompatibilitySection
             systemFeaturesSection
             advancedSection
             saveResetSection
@@ -181,9 +186,11 @@ struct MobileGestaltView: View {
         GlassSection(header: Text(L("section_display_and_ui"))) {
             Toggle(L("mg_disable_parallax"), isOn: bindingForMGKeys(["UIParallaxCapability"], type: Int.self, defaultValue: 1, enableValue: 0))
 
-            Toggle(L("mg_stage_manager_dock_iphone_ui"), isOn: bindingForMedusa())
+            Toggle(L("mg_stage_manager_iphone_ui"), isOn: bindingForStageManager())
                 .disabled(fullIPadModeEnabled)
-            Text(L("mg_stage_manager_dock_iphone_ui_desc"))
+            Toggle(L("mg_medusa_window_capabilities"), isOn: bindingForMedusaWindows())
+                .disabled(fullIPadModeEnabled)
+            Text(L("mg_stage_manager_iphone_ui_desc"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
@@ -191,6 +198,18 @@ struct MobileGestaltView: View {
                 .disabled(Utils.requiresVersion(18))
             Toggle(L("mg_aod_vibrancy"), isOn: bindingForMGKeys(["ykpu7qyhqFweVMKtxNylWA"]))
                 .disabled(Utils.requiresVersion(18))
+        }
+    }
+
+    @ViewBuilder
+    private var dockCompatibilitySection: some View {
+        GlassSection(header: Text(L("mg_floating_dock_setup_title"))) {
+            Label(L("mg_floating_dock_native_label"), systemImage: "square.stack.3d.up")
+            Text(L("mg_floating_dock_setup_desc"))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text(L("mg_floating_dock_setup_steps"))
+                .font(.footnote)
         }
     }
 
@@ -244,7 +263,7 @@ struct MobileGestaltView: View {
                     // Save resolution plist for RDAR fix
                     try saveResolutionPlist()
                     
-                    lastError = "Saved ModifiedMobileGestalt.plist. Now go Home â Apply Enabled Tools."
+                    lastError = "Saved ModifiedMobileGestalt.plist. Now go Home → Apply Enabled Tools."
                     showErrorAlert = true
                 } catch {
                     lastError = "Save failed: \(error)"
@@ -267,9 +286,9 @@ struct MobileGestaltView: View {
                     
                     if wasTrollPadEnabled {
                         toolStore.bookassetdUUID = nil
-                        lastError = "Reset done. MobileGestalt tool enabled. Bookassetd UUID cleared (iPadOS was enabled). Now go Home â Apply Enabled Tools to apply the reset to system."
+                        lastError = "Reset done. MobileGestalt tool enabled. Bookassetd UUID cleared (iPadOS was enabled). Now go Home → Apply Enabled Tools to apply the reset to system."
                     } else {
-                        lastError = "Reset done. MobileGestalt tool enabled. Now go Home â Apply Enabled Tools to apply the reset to system."
+                        lastError = "Reset done. MobileGestalt tool enabled. Now go Home → Apply Enabled Tools to apply the reset to system."
                     }
                     showErrorAlert = true
                 } catch {
@@ -339,22 +358,46 @@ struct MobileGestaltView: View {
         )
     }
     
-    /// Enables only the Medusa / Stage Manager capability set. Unlike Become iPadOS,
-    /// this never sets the iPad capability and never changes DeviceClassNumber in CacheData.
-    func bindingForMedusa() -> Binding<Bool> {
+    /// Toggles only DeviceSupportsEnhancedMultitasking. This follows the
+    /// MobileGestalt-based method used by the project and does not spoof iPadOS.
+    func bindingForStageManager() -> Binding<Bool> {
         guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
             return State(initialValue: false).projectedValue
         }
 
-        let keys = Self.medusaCapabilityKeys
+        let key = Self.stageManagerCapabilityKey
+        return Binding(
+            get: { (cacheExtra[key] as? NSNumber)?.boolValue ?? false },
+            set: { enabled in
+                let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
+                guard !enabled || !isFullIPadMode else {
+                    refreshMultitaskingModeState()
+                    return
+                }
+
+                if enabled {
+                    cacheExtra[key] = 1
+                } else {
+                    restoreOriginalCacheExtraValue(key, in: cacheExtra)
+                }
+                refreshMultitaskingModeState()
+            }
+        )
+    }
+
+    /// Toggles the four auxiliary Medusa window capabilities independently of
+    /// Stage Manager itself. These flags alone do not install a SpringBoard tweak.
+    func bindingForMedusaWindows() -> Binding<Bool> {
+        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
+            return State(initialValue: false).projectedValue
+        }
+
+        let keys = Self.medusaWindowCapabilityKeys
         return Binding(
             get: {
-                let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
-                return !isFullIPadMode && keys.allSatisfy { (cacheExtra[$0] as? Int) == 1 }
+                keys.allSatisfy { (cacheExtra[$0] as? NSNumber)?.boolValue == true }
             },
             set: { enabled in
-                // Keep the two modes mutually exclusive. If full iPadOS is active,
-                // the selective mode cannot be enabled until it is disabled first.
                 let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
                 guard !enabled || !isFullIPadMode else {
                     refreshMultitaskingModeState()
@@ -365,7 +408,7 @@ struct MobileGestaltView: View {
                     if enabled {
                         cacheExtra[key] = 1
                     } else {
-                        cacheExtra.removeObject(forKey: key)
+                        restoreOriginalCacheExtraValue(key, in: cacheExtra)
                     }
                 }
                 refreshMultitaskingModeState()
@@ -373,8 +416,20 @@ struct MobileGestaltView: View {
         )
     }
 
-    /// Recomputes UI state from the in-memory plist so the two mutually exclusive
-    /// controls always reflect the actual MobileGestalt values being edited.
+    /// Restore a key to the original MobileGestalt value rather than blindly
+    /// deleting it. This preserves existing false/zero values and non-integer types.
+    private func restoreOriginalCacheExtraValue(_ key: String, in cacheExtra: NSMutableDictionary) {
+        let originalRoot = NSDictionary(contentsOf: origMGURL)
+        let originalCacheExtra = originalRoot?["CacheExtra"] as? NSDictionary
+        if let originalValue = originalCacheExtra?[key] {
+            cacheExtra[key] = originalValue
+        } else {
+            cacheExtra.removeObject(forKey: key)
+        }
+    }
+
+    /// Recomputes UI state from the in-memory plist. Become iPadOS is locked out
+    /// whenever the selective Stage Manager/Medusa profile is active.
     private func refreshMultitaskingModeState() {
         guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
             medusaOnlyModeEnabled = false
@@ -384,9 +439,11 @@ struct MobileGestaltView: View {
 
         let isFullIPadMode = (cacheExtra[Self.ipadCapabilityKey] as? Int) == 1
         fullIPadModeEnabled = isFullIPadMode
-        medusaOnlyModeEnabled = !isFullIPadMode && Self.medusaCapabilityKeys.allSatisfy {
-            (cacheExtra[$0] as? Int) == 1
+        let stageManagerEnabled = (cacheExtra[Self.stageManagerCapabilityKey] as? NSNumber)?.boolValue == true
+        let anyMedusaWindowCapability = Self.medusaWindowCapabilityKeys.contains {
+            (cacheExtra[$0] as? NSNumber)?.boolValue == true
         }
+        medusaOnlyModeEnabled = !isFullIPadMode && (stageManagerEnabled || anyMedusaWindowCapability)
     }
 
     func bindingForRegionRestriction() -> Binding<Bool> {
