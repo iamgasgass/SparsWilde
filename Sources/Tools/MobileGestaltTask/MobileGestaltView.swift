@@ -164,6 +164,7 @@ struct MobileGestaltView: View {
         GlassSection(header: Text(L("section_display_and_ui"))) {
             Toggle(L("mg_disable_parallax"), isOn: bindingForMGKeys(["UIParallaxCapability"], type: Int.self, defaultValue: 1, enableValue: 0))
             Toggle(L("mg_stage_manager"), isOn: bindingForMGKeys(["qeaj75wk3HF4DwQ8qbIi7g"]))
+            Toggle("Medusa multitasking (floating / overlay / pinned / PiP)", isOn: bindingForMedusa())
             Toggle(L("mg_aod"), isOn: bindingForMGKeys(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
                 .disabled(Utils.requiresVersion(18))
             Toggle(L("mg_aod_vibrancy"), isOn: bindingForMGKeys(["ykpu7qyhqFweVMKtxNylWA"]))
@@ -187,9 +188,14 @@ struct MobileGestaltView: View {
     private var advancedSection: some View {
         GlassSection(header: Text(L("section_internal_features"))) {
             Toggle(L("mg_internal_storage"), isOn: bindingForMGKeys(["LBJfwOEzExRxzlAnSuI7eg"]))
-            Toggle(L("mg_internal_stuff"), isOn: bindingForInternalStuff())
+            Toggle("Internal Install / Internal Build / Settings Bundle", isOn: bindingForInternalStuff())
             Toggle(L("mg_security_research"), isOn: bindingForMGKeys(["XYlJKKkj2hztRP1NWWnhlw"]))
             Toggle(L("mg_metal_hud"), isOn: bindingForMGKeys(["EqrsVvjcYDdxHBiQmGhAWw"]))
+            Toggle("Medusa floating live apps", isOn: bindingForMGKeys(["mG0AnH/Vy1veoqoLRAIgTA"]))
+            Toggle("Medusa overlay apps", isOn: bindingForMGKeys(["UCG5MkVahJxG1YULbbd5Bg"]))
+            Toggle("Medusa pinned apps", isOn: bindingForMGKeys(["ZYqko/XM5zD3XBfN5RmaXA"]))
+            Toggle("Medusa Picture in Picture", isOn: bindingForMGKeys(["nVh/gwNpy7Jv1NOk00CMrw"]))
+            Toggle("Security research mode", isOn: bindingForMGKeys(["XYlJKKkj2hztRP1NWWnhlw"]))
             Toggle(L("mg_apple_intelligence"), isOn: bindingForAppleIntelligence())
                 .disabled(Utils.requiresVersion(18))
             GlassMenuPicker(L("mg_device_model"), selection: $productType) {

@@ -27,6 +27,19 @@ struct SettingsView: View {
         ("Red", "#e78284"),
         ("Green", "#a6d189"),
         ("Blue", "#8caaee"),
+        ("Peach", "#ef9f76"),
+        ("Orange", "#e5a065"),
+        ("Yellow", "#e5c890"),
+        ("Lime", "#a9c77d"),
+        ("Teal", "#81c8be"),
+        ("Cyan", "#99d1db"),
+        ("Sky", "#7dc4e4"),
+        ("Indigo", "#8c8ee8"),
+        ("Purple", "#b4a0e8"),
+        ("Lavender", "#c6a0d8"),
+        ("Coral", "#f08080"),
+        ("Rose", "#d787a5"),
+        ("White", "#dce0e8"),
     ]
 
     @State private var copiedPath: String?
@@ -414,7 +427,9 @@ struct SettingsView: View {
 struct AboutView: View {
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @ObservedObject private var languageManager = LanguageManager.shared
-    private let contactURL = URL(string: "https://x.com/duongduong0908")!
+    // Opens the requested GitHub profile. GitHub's noreply addresses are not valid
+    // contact inboxes; use a verified public email here if the account publishes one.
+    private let contactURL = URL(string: "https://github.com/iamgasgass")!
 
     var body: some View {
         GlassForm {
@@ -448,13 +463,13 @@ struct AboutView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
-                Text("If you enjoy the app, please consider buying me a coffee ☕️ to fuel my late-night coding sessions. Every contribution is greatly appreciated!")
+                Text("If you enjoy the app, you can support development with a €1 donation via PayPal. Every contribution is appreciated!")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
                 Button {
-                    if let url = URL(string: "https://ko-fi.com/yangjiii") {
+                    if let url = URL(string: "https://paypal.me/iamgasgass/1") {
                         UIApplication.shared.open(url)
                     }
                 } label: {
@@ -475,15 +490,8 @@ struct AboutView: View {
     @ViewBuilder
     private var feedbackSection: some View {
         GlassSection {
-            Button(action: {
-                if let url = URL(string: "https://github.com/YangJiiii/EnsWilde") {
-                    UIApplication.shared.open(url)
-                }
-            }) {
-                Label(L("settings_guide"), systemImage: "safari")
-            }
             Button(action: { UIApplication.shared.open(contactURL) }) {
-                Label(L("settings_contact"), systemImage: "paperplane.fill")
+                Label(L("settings_contact"), systemImage: "envelope.fill")
             }
         }
     }
