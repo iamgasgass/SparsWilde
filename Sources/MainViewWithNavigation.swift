@@ -9,6 +9,7 @@ struct MainViewWithNavigation: View {
     @StateObject private var toolRunner = ToolRunner()
     @StateObject private var walletStore = AppleWalletStore()
     @StateObject private var featureFlagsStore = FeatureFlagsStore()
+    @StateObject private var nuggetTweakStore = NuggetTweakStore()
     @State private var showApplySheet = false
     @State private var showStatusSheet = false
     @State private var isInNestedView = false
@@ -26,6 +27,7 @@ struct MainViewWithNavigation: View {
                 toolRunner: toolRunner,
                 walletStore: walletStore,
                 featureFlagsStore: featureFlagsStore,
+                nuggetTweakStore: nuggetTweakStore,
                 showApplySheetBinding: $showApplySheet,
                 showStatusSheetBinding: $showStatusSheet,
                 hideBottomApplyButton: true,
@@ -70,6 +72,7 @@ struct MainViewWithNavigation: View {
                     walletStore: walletStore,
                     themeStore: themeStore,
                     featureFlagsStore: featureFlagsStore,
+                    nuggetTweakStore: nuggetTweakStore,
                     isSystemReady: isSystemReady
                 )
                 .tabItem {
@@ -110,6 +113,7 @@ struct ApplyTabView: View {
     @ObservedObject var walletStore: AppleWalletStore
     @ObservedObject var themeStore: PasscodeThemeStore
     @ObservedObject var featureFlagsStore: FeatureFlagsStore
+    @ObservedObject var nuggetTweakStore: NuggetTweakStore
     var isSystemReady: Bool
 
     @State private var showUUIDAlert = false
@@ -130,7 +134,7 @@ struct ApplyTabView: View {
         if toolStore.themesUIEnabled { list.append((L("tool_themes_ui"), "paintbrush")) }
         if toolStore.zPatchCustomEnabled { list.append((L("tool_zpatch_custom"), "wrench.and.screwdriver")) }
         if featureFlagsStore.featureFlagsEnabled { list.append((L("tool_feature_flags"), "flag")) }
-        if toolStore.systemTweaksEnabled && NuggetSystemTweaksStore.hasSelectedTweaks { list.append((L("tool_system_tweaks"), "slider.horizontal.3")) }
+        if nuggetTweakStore.isEnabled && !nuggetTweakStore.selectedDefinitions().isEmpty { list.append(("Nugget Tweaks", "slider.horizontal.3")) }
         return list
     }
 

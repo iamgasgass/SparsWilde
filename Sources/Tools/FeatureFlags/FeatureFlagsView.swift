@@ -46,7 +46,7 @@ struct FeatureFlagsView: View {
             }
 
             // Other Feature Flags Groups (clock_anim is always-on and hidden from UI)
-            ForEach(["Basic", "Lockscreen", "Photos", "AI", "Liquid Glass", "Other"], id: \.self) { groupName in
+            ForEach(["Basic", "Lockscreen", "Photos", "AI"], id: \.self) { groupName in
                 if let flags = FeatureFlagPresets.groupedFlags[groupName] {
                     let visible = flags.filter { $0.id != FeatureFlagPresets.clockAnimFlagID }
                     if !visible.isEmpty {
@@ -94,8 +94,6 @@ struct FeatureFlagsView: View {
             case "Lockscreen": return L("ff_group_lockscreen")
             case "Photos": return L("ff_group_photos")
             case "AI": return L("ff_group_ai")
-            case "Liquid Glass": return "Liquid Glass / Solarium"
-            case "Other": return "Other feature flags"
             default: return groupName
             }
         }()

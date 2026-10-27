@@ -15,9 +15,6 @@ final class ToolStore: ObservableObject {
     
     // Themes UI
     @AppStorage("ThemesUIEnabled") var themesUIEnabled: Bool = false
-
-    // Nugget-style SpringBoard / internal / risky system plist tweaks
-    @AppStorage("NuggetSystemTweaksEnabled") var systemTweaksEnabled: Bool = false
     
     // zPatch Custom
     @AppStorage("zPatchCustomEnabled") var zPatchCustomEnabled: Bool = false
@@ -26,6 +23,9 @@ final class ToolStore: ObservableObject {
     // DisableSound delays
     @AppStorage("SoundDelayAfterStartSeconds") var soundDelayAfterStart: Double = 3.0
     @AppStorage("SoundDelayAfterStopSeconds") var soundDelayAfterStop: Double = 3.0
+
+    // Nugget-compatible plist tweaks
+    @AppStorage("NuggetTweakCatalogEnabled") var nuggetTweaksEnabled: Bool = false
 
     // Other / legacy
     @AppStorage("DeviceUDID") var deviceUDID: String = ""

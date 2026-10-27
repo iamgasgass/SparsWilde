@@ -25,12 +25,6 @@ It operates as a standalone on-device application, functioning independently lik
 
 ---
 
-## Nugget-inspired system tweak catalog
-
-SparsWilde includes an opt-in **Nugget-style System Tweaks** screen for preference and feature-flag payloads that can be expressed through the app's existing BookRestore flow. This is not a full port of Nugget: payloads that require direct SpringBoard injection, StatusBar API calls, additional eligibility configuration assets, or a live merge of aggregate system plists are not exposed as if they were guaranteed to work.
-
-The catalog includes SpringBoard and internal preference overrides, Liquid Glass/Solarium preference overrides, selected FeatureFlags presets, MobileGestalt capability toggles, device/hardware identifier fields, and experimental canvas dimensions. Many keys are private and version-dependent; applying a plist does not guarantee iOS will honor the key. High-risk choices are opt-in and display warnings. Back up the device before applying system changes.
-
 ## Usage Guides
 
 ### Apple Wallet Background Guide
@@ -93,3 +87,8 @@ Special thanks to the following for their contributions and support:
 SparsWilde accepts pairing records in both `.mobiledevicepairing` and `.plist` formats. XML and binary property lists are supported; imported records are validated and normalized to XML plist before being stored.
 
 The source project has been rebranded locally. Existing upstream URLs for update metadata, translations, and theme catalogs are retained until the new repository/service URLs are provided.
+
+
+## Nugget compatibility integration
+
+SparsWilde includes a native SwiftUI catalog of transferable plist preference tweaks inspired by [Nugget](https://github.com/leminlimez/Nugget), which is licensed under AGPL-3.0. See [NUGGET_INTEGRATION.md](NUGGET_INTEGRATION.md) for the supported scope, attribution, and non-portable features. This is not a literal port of the desktop application; exploit-, asset-, and OS-version-specific features need dedicated implementations and are not marked as supported unless wired into the existing restore pipeline.

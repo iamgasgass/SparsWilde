@@ -85,6 +85,7 @@ struct ContentView: View {
     @ObservedObject var walletStore: AppleWalletStore
     @ObservedObject var themeStore: PasscodeThemeStore
     @ObservedObject var featureFlagsStore: FeatureFlagsStore
+    @ObservedObject var nuggetTweakStore: NuggetTweakStore
 
     // Update check
     private let versionJSONURL = URL(string: "https://raw.githubusercontent.com/YangJiiii/EnsWilde/refs/heads/main/version.json")!
@@ -113,6 +114,7 @@ struct ContentView: View {
         toolRunner: ToolRunner,
         walletStore: AppleWalletStore,
         featureFlagsStore: FeatureFlagsStore,
+        nuggetTweakStore: NuggetTweakStore,
         showApplySheetBinding: Binding<Bool>? = nil,
         showStatusSheetBinding: Binding<Bool>? = nil,
         hideBottomApplyButton: Bool = false,
@@ -126,6 +128,7 @@ struct ContentView: View {
         self.toolRunner = toolRunner
         self.walletStore = walletStore
         self.featureFlagsStore = featureFlagsStore
+        self.nuggetTweakStore = nuggetTweakStore
         self.showApplySheetBinding = showApplySheetBinding
         self.showStatusSheetBinding = showStatusSheetBinding
         self.hideBottomApplyButton = hideBottomApplyButton
@@ -396,11 +399,11 @@ struct ContentView: View {
             )
 
             toolNavigationLink(
-                value: "SystemTweaks",
-                title: L("tool_system_tweaks"),
-                subtitle: L("tool_system_tweaks_desc"),
+                value: "NuggetTweaks",
+                title: "Nugget Tweaks",
+                subtitle: "System preferences and Liquid Glass tweaks",
                 icon: "slider.horizontal.3",
-                isEnabled: toolStore.systemTweaksEnabled
+                isEnabled: nuggetTweakStore.isEnabled
             )
 
             toolNavigationLink(
@@ -431,8 +434,8 @@ struct ContentView: View {
             zPatchCustomView()
         } else if route == "FeatureFlags" {
             FeatureFlagsView(store: featureFlagsStore)
-        } else if route == "SystemTweaks" {
-            NuggetSystemTweaksView(toolStore: toolStore)
+        } else if route == "NuggetTweaks" {
+            NuggetTweaksView(store: nuggetTweakStore)
         }
     }
 
@@ -465,7 +468,7 @@ struct ContentView: View {
                         return
                     }
                     
-                    await toolRunner.applyAll(isSystemReady: _isSystemReady, store: toolStore, walletStore: walletStore, themeStore: themeStore, featureFlagsStore: featureFlagsStore)
+                    await toolRunner.applyAll(isSystemReady: _isSystemReady, store: toolStore, walletStore: walletStore, themeStore: themeStore, featureFlagsStore: featureFlagsStore, nuggetTweakStore: nuggetTweakStore)
                     
                     if case .success = toolRunner.state {
                         try? await Task.sleep(nanoseconds: 8_000_000_000)
@@ -512,7 +515,7 @@ struct ContentView: View {
                     Task {
                         try? await Task.sleep(nanoseconds: 1_000_000_000)
                         
-                        await self.toolRunner.applyAll(isSystemReady: self._isSystemReady, store: self.toolStore, walletStore: self.walletStore, themeStore: self.themeStore, featureFlagsStore: self.featureFlagsStore)
+                        await self.toolRunner.applyAll(isSystemReady: self._isSystemReady, store: self.toolStore, walletStore: self.walletStore, themeStore: self.themeStore, featureFlagsStore: self.featureFlagsStore, nuggetTweakStore: self.nuggetTweakStore)
                         
                         if case .success = self.toolRunner.state {
                             try? await Task.sleep(nanoseconds: 8_000_000_000)
