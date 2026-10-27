@@ -20,7 +20,11 @@ struct ContentView: View {
 
     // Services state
     @State private var heartbeatRunning = false
-    @State private var ddiMounted = false
+    // DDI state comes from StikDebug's MountingProgress (see DDI/mountDDI.swift)
+    @ObservedObject private var mounting = MountingProgress.shared
+    private var ddiMounted: Bool { mounting.coolisMounted }
+    @State private var heartbeatStartInProgress = false
+    private let ddiCheckTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     // UI state
     @State private var showPairingFileImporter = false
@@ -98,11 +102,6 @@ struct ContentView: View {
     @State private var pairingResetTimer: DispatchWorkItem?
     @State private var pairingResetAttempted = false
     
-    // DDI monitoring and auto-remount
-    @State private var ddiMonitorTimer: Timer?
-    @State private var lastKnownDDIMountState = false
-    @State private var ddiMountRetryCount = 0
-    @State private var lastDDIMountAttempt: Date?
     
     // Animation Config (Hiệu ứng trượt mượt mà)
     private let panelAnimation: Animation = .spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)
@@ -259,9 +258,14 @@ struct ContentView: View {
                 cancelPairingResetTimer()
             }
         }
+        .onReceive(ddiCheckTimer) { _ in
+            // Same as StikDebug HomeView: poll mount state while not mounted and not mounting
+            if pairingFile != nil && heartbeatRunning && mounting.mountingThread == nil && !mounting.coolisMounted {
+                MountingProgress.shared.checkforMounted()
+            }
+        }
         .onDisappear {
             stopNetworkMonitoring()
-            stopDDIMonitoring()
             cancelPairingResetTimer()
         }
     } // Body End
@@ -320,12 +324,12 @@ struct ContentView: View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L("ddi_not_mounted"))
-                if ddiMountRetryCount >= 5 {
-                    Text("Max auto-mount attempts reached. Tap status bar to retry manually.")
+                if mounting.mountingThread != nil {
+                    Text("Mounting Developer Disk Image…")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else if ddiMountRetryCount > 0 {
-                    Text("Auto-mounting DDI... (Attempt \(ddiMountRetryCount)/5)")
+                } else if !ddiFilesAreDownloaded() {
+                    Text("Download the DDI files in Settings first.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
@@ -335,7 +339,7 @@ struct ContentView: View {
                 }
             }
         } icon: {
-            Image(systemName: ddiMountRetryCount >= 5 ? "exclamationmark.triangle.fill" : "info.circle.fill")
+            Image(systemName: "info.circle.fill")
                 .foregroundStyle(Color.accentColor)
         }
     }
@@ -428,10 +432,10 @@ struct ContentView: View {
         StatusSheet(
             pairingFileLoaded: .constant(pairingFile != nil),
             heartbeatRunning: $heartbeatRunning,
-            ddiMounted: $ddiMounted,
+            ddiMounted: $mounting.coolisMounted,
             onImportPairing: { showPairingFileImporter = true },
             onResetPairing: { resetPairing() },
-            onMountDDI: { attemptAutoMountDDI() },
+            onMountDDI: { MountingProgress.shared.pubMount() },
             onClose: { statusSheet.wrappedValue = false }
         )
         .presentationDetents([.medium, .large])
@@ -642,13 +646,12 @@ struct ContentView: View {
         autoLoadSideStorePairingIfNeeded()
         
         if pairingFile != nil {
-            ddiMounted = computeDDIMounted()
             startHeartbeatOnce()
             // Start auto-reset timer if system not ready
             startPairingResetTimer()
         } else {
             heartbeatRunning = false
-            ddiMounted = false
+            MountingProgress.shared.coolisMounted = false
             cancelPairingResetTimer()
         }
     }
@@ -717,7 +720,6 @@ struct ContentView: View {
     private func importPairingFile(_ text: String) {
         pairingFile = text
         savePairingFileToDocuments(text)
-        ddiMounted = computeDDIMounted()
         startHeartbeatOnce()
     }
 
@@ -765,15 +767,7 @@ struct ContentView: View {
             print("Warning: Failed to delete pairing file: \(error)")
         }
         heartbeatRunning = false
-        ddiMounted = false
-        
-        // Stop DDI monitoring
-        stopDDIMonitoring()
-        
-        // Reset DDI state
-        lastKnownDDIMountState = false
-        ddiMountRetryCount = 0
-        lastDDIMountAttempt = nil
+        MountingProgress.shared.coolisMounted = false
     }
     
     /// Start timer to auto-reset pairing file if system not ready after 3 seconds
@@ -785,7 +779,7 @@ struct ContentView: View {
         // 1. Pairing file exists
         // 2. System is not ready
         // 3. Haven't already attempted reset for this pairing file
-        guard pairingFile != nil && !_isSystemReady && !pairingResetAttempted else {
+        guard pairingFile != nil && !heartbeatRunning && !pairingResetAttempted else {
             return
         }
         
@@ -793,7 +787,7 @@ struct ContentView: View {
         
         let workItem = DispatchWorkItem {
             // Double-check conditions before resetting
-            if self.pairingFile != nil && !self._isSystemReady {
+            if self.pairingFile != nil && !self.heartbeatRunning {
                 print("[Auto-Reset] System not ready after 3 seconds, resetting pairing file")
                 
                 DispatchQueue.main.async {
@@ -808,7 +802,7 @@ struct ContentView: View {
         }
         
         pairingResetTimer = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.0, execute: workItem)
     }
     
     /// Cancel the auto-reset timer
@@ -817,194 +811,56 @@ struct ContentView: View {
         pairingResetTimer = nil
     }
 
-    private func computeDDIMounted() -> Bool {
-        guard let context = JITEnableContext.shared else { return false }
-        return context.isDeveloperDiskImageMounted()
-    }
-
+    /// Heartbeat start, same flow as StikDebug's startHeartbeatInBackground():
+    /// start heartbeat on a background queue, then auto-mount the personalized DDI if downloaded.
     private func startHeartbeatOnce() {
         guard pairingFile != nil else { return }
-        DispatchQueue.global(qos: .background).async { [self] in
-            let completionHandler: @convention(block) (Int32, String?) -> Void = { result, message in
+        guard !heartbeatStartInProgress else { return }
+        heartbeatStartInProgress = true
+
+        DispatchQueue.global(qos: .userInteractive).async {
+            defer {
                 DispatchQueue.main.async {
-                    if result == 0 {
-                        self.heartbeatRunning = true
-                        self.ddiMounted = self.computeDDIMounted()
-                        self.lastKnownDDIMountState = self.ddiMounted
-                        
-                        // Start DDI monitoring
-                        self.startDDIMonitoring()
-                        
-                        // Auto-mount DDI if not mounted
-                        if !self.ddiMounted {
-                            self.attemptAutoMountDDI()
-                        }
-                    } else {
-                        self.heartbeatRunning = false
-                        self.ddiMounted = false
-                        
-                        // Stop DDI monitoring when heartbeat fails
-                        self.stopDDIMonitoring()
-                        
-                        // Provide specific error messages based on error code
-                        switch result {
-                        case -9:
-                            self.resetPairing()
-                            self.lastError = "Invalid pairing file. Please select a new one."
-                        case -1:
-                            self.lastError = "Connection failed. Please check:\n- SideStore LocalDevVPN or StikDebug is running\n- VPN connection is active\n- Then close and reopen the app"
-                        case -2:
-                            self.lastError = "No valid tunnel IPs found. Please configure TunnelDeviceIP in settings or ensure VPN is properly set up."
-                        default:
-                            let errorMsg = message ?? "Unknown error"
-                            self.lastError = "Heartbeat failed (Error: \(result)): \(errorMsg)"
-                        }
-                        self.showErrorAlert = true
-                    }
+                    self.heartbeatStartInProgress = false
                 }
             }
+            do {
+                try JITEnableContext.shared.startHeartbeat()
+                print("[Heartbeat] Heartbeat started successfully")
 
-            guard let context = JITEnableContext.shared else {
+                DispatchQueue.main.async {
+                    self.heartbeatRunning = true
+                    let trustcachePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg.trustcache").path
+                    guard FileManager.default.fileExists(atPath: trustcachePath),
+                          !MountingProgress.shared.coolisMounted,
+                          MountingProgress.shared.mountingThread == nil else {
+                        MountingProgress.shared.checkforMounted()
+                        return
+                    }
+                    MountingProgress.shared.pubMount()
+                }
+            } catch {
+                let code = (error as NSError).code
+                print("[Heartbeat] \(error.localizedDescription) (Code: \(code))")
                 DispatchQueue.main.async {
                     self.heartbeatRunning = false
-                    self.ddiMounted = false
-                    self.lastError = "Failed to initialize JIT context. Please restart the app."
+                    MountingProgress.shared.coolisMounted = false
+                    if code == -9 {
+                        self.resetPairing()
+                        self.lastError = "The pairing file is invalid or expired. Please select a new pairing file."
+                    } else {
+                        self.lastError = "\(error.localizedDescription)\n\nMake sure Wi‑Fi and LocalDevVPN are connected and that the device is reachable."
+                    }
                     self.showErrorAlert = true
                 }
-                return
-            }
-            
-            // Call startHeartbeat with proper error handling
-            context.startHeartbeat(completionHandler: completionHandler, logger: { msg in
-                print("[Heartbeat] \(msg)")
-            })
-        }
-    }
-    
-    private func attemptAutoMountDDI(showErrorAlert: Bool = true) {
-        guard let context = JITEnableContext.shared else { return }
-        
-        // If this is a manual attempt (showErrorAlert = true), reset the retry counter
-        if showErrorAlert && ddiMountRetryCount >= 5 {
-            print("[DDI Manual Mount] Resetting stuck retry counter for manual attempt")
-            ddiMountRetryCount = 0
-            lastDDIMountAttempt = nil
-        }
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            // First check if DDI is already mounted
-            let currentlyMounted = self.computeDDIMounted()
-            
-            if currentlyMounted {
-                DispatchQueue.main.async {
-                    self.ddiMounted = true
-                    if showErrorAlert {
-                        self.lastError = "Developer Disk Image is already mounted."
-                        self.showErrorAlert = true
-                    }
-                }
-                return
-            }
-            
-            // If not mounted, try built-in DDI first
-            do {
-                try context.mountDeveloperDiskImage { status in
-                    print("[DDI Auto-Mount] \(status ?? "nil")")
-                }
-                
-                DispatchQueue.main.async {
-                    self.ddiMounted = self.computeDDIMounted()
-                    self.lastKnownDDIMountState = self.ddiMounted
-                    self.ddiMountRetryCount = 0
-                    print("[DDI Auto-Mount] Success! DDI is now mounted.")
-                    
-                    if showErrorAlert {
-                        self.lastError = "Developer Disk Image mounted successfully!"
-                        self.showErrorAlert = true
-                    }
-                }
-            } catch let error as NSError {
-                print("[DDI Auto-Mount] Built-in DDI failed: \(error.localizedDescription). Trying personalized DDI...")
-                
-                // Fallback: try personalized DDI if files are downloaded
-                let imagePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg").path
-                let trustcachePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg.trustcache").path
-                let manifestPath = URL.documentsDirectory.appendingPathComponent("DDI/BuildManifest.plist").path
-                let fm = FileManager.default
-                
-                if fm.fileExists(atPath: imagePath) && fm.fileExists(atPath: trustcachePath) && fm.fileExists(atPath: manifestPath) {
-                    do {
-                        try context.mountPersonalDDI(withImagePath: imagePath, trustcachePath: trustcachePath, manifestPath: manifestPath)
-                        
-                        DispatchQueue.main.async {
-                            self.ddiMounted = self.computeDDIMounted()
-                            self.lastKnownDDIMountState = self.ddiMounted
-                            self.ddiMountRetryCount = 0
-                            print("[DDI Auto-Mount] Personalized DDI mounted successfully!")
-                            
-                            if showErrorAlert {
-                                self.lastError = L("ddi_mount_personal_success")
-                                self.showErrorAlert = true
-                            }
-                        }
-                        return
-                    } catch let personalError as NSError {
-                        print("[DDI Auto-Mount] Personalized DDI also failed: \(personalError.localizedDescription)")
-                    }
-                }
-                
-                DispatchQueue.main.async {
-                    print("[DDI Auto-Mount] Error: \(error.localizedDescription)")
-                    
-                    if showErrorAlert {
-                        var errorMessage = "Failed to mount DDI: \(error.localizedDescription)"
-                        
-                        if error.code == -2 {
-                            errorMessage = "Developer Mode is not enabled. Please enable it in Settings → Privacy & Security → Developer Mode, then restart your device."
-                        } else if error.localizedDescription.contains("FfinvalidArg") || error.localizedDescription.contains("invalidArg") {
-                            errorMessage = "DDI mounting failed. This can happen after device reboot.\n\nPlease try:\n1. Go to Settings tab → Download DDI → Mount Personalized DDI\n2. Or enable Developer Mode in Settings → Privacy & Security → Developer Mode\n3. Wait a moment and the app will retry automatically"
-                        } else {
-                            errorMessage += "\n\nTip: Go to Settings tab → Download DDI to download personalized DDI files, then use Mount Personalized DDI."
-                        }
-                        
-                        self.lastError = errorMessage
-                        self.showErrorAlert = true
-                    }
-                }
             }
         }
     }
-    
+
     /// Refresh system status (VPN, DDI, heartbeat)
     private func refreshSystemStatus() {
-        // Refresh DDI mounted status
-        if pairingFile != nil {
-            let newDDIState = computeDDIMounted()
-            
-            // Check if DDI state changed
-            if newDDIState != ddiMounted {
-                print("[Refresh] DDI state changed: \(ddiMounted) -> \(newDDIState)")
-                ddiMounted = newDDIState
-                lastKnownDDIMountState = newDDIState
-                
-                // If DDI became unmounted, attempt to remount
-                if !newDDIState && heartbeatRunning {
-                    print("[Refresh] DDI unmounted, attempting remount...")
-                    // Reset retry counter on network change/refresh
-                    if ddiMountRetryCount >= 5 {
-                        print("[Refresh] Resetting stuck retry counter (was at max)")
-                        ddiMountRetryCount = 0
-                        lastDDIMountAttempt = nil
-                    }
-                    attemptAutoMountDDIWithRetry()
-                } else if newDDIState {
-                    // DDI mounted successfully - reset counter
-                    ddiMountRetryCount = 0
-                    lastDDIMountAttempt = nil
-                }
-            } else {
-                ddiMounted = newDDIState
-            }
+        if pairingFile != nil && heartbeatRunning {
+            MountingProgress.shared.checkforMounted()
         }
         // Heartbeat status is updated automatically by startHeartbeatOnce
     }
@@ -1038,105 +894,6 @@ struct ContentView: View {
         networkMonitor = nil
     }
     
-    /// Start DDI status monitoring
-    private func startDDIMonitoring() {
-        // Stop any existing timer
-        stopDDIMonitoring()
-        
-        guard pairingFile != nil && heartbeatRunning else {
-            print("[DDI Monitor] Not starting - pairing or heartbeat not ready")
-            return
-        }
-        
-        print("[DDI Monitor] Starting periodic DDI status checks")
-        
-        // Set initial state
-        lastKnownDDIMountState = ddiMounted
-        
-        // Reset retry counter when starting monitoring (fresh start)
-        ddiMountRetryCount = 0
-        lastDDIMountAttempt = nil
-        print("[DDI Monitor] Reset retry counter for fresh start")
-        
-        // Check DDI status every 5 seconds
-        ddiMonitorTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] _ in
-            // Only monitor if pairing and heartbeat are active
-            guard self.pairingFile != nil && self.heartbeatRunning else {
-                print("[DDI Monitor] Stopping - pairing or heartbeat lost")
-                self.stopDDIMonitoring()
-                return
-            }
-            
-            let currentDDIState = self.computeDDIMounted()
-            
-            // Detect state change
-            if currentDDIState != self.lastKnownDDIMountState {
-                print("[DDI Monitor] DDI state changed: \(self.lastKnownDDIMountState) -> \(currentDDIState)")
-                
-                self.lastKnownDDIMountState = currentDDIState
-                self.ddiMounted = currentDDIState
-                
-                // If DDI became unmounted, try to remount it
-                if !currentDDIState {
-                    print("[DDI Monitor] DDI was unmounted (likely due to device reboot). Attempting auto-remount...")
-                    self.attemptAutoMountDDIWithRetry()
-                } else {
-                    // DDI successfully mounted
-                    print("[DDI Monitor] DDI is now mounted")
-                    self.ddiMountRetryCount = 0
-                }
-            } else if !currentDDIState {
-                // DDI still not mounted, check if we should retry
-                self.checkAndRetryDDIMount()
-            }
-        }
-    }
-    
-    /// Stop DDI monitoring
-    private func stopDDIMonitoring() {
-        ddiMonitorTimer?.invalidate()
-        ddiMonitorTimer = nil
-        print("[DDI Monitor] Stopped")
-    }
-    
-    /// Attempt to mount DDI with retry logic
-    private func attemptAutoMountDDIWithRetry() {
-        // Check if we should rate-limit attempts
-        if let lastAttempt = lastDDIMountAttempt {
-            let timeSinceLastAttempt = Date().timeIntervalSince(lastAttempt)
-            
-            // Exponential backoff: wait 2^retryCount seconds (minimum 5 seconds)
-            let waitTime = max(5.0, pow(2.0, Double(ddiMountRetryCount)))
-            
-            if timeSinceLastAttempt < waitTime {
-                print("[DDI Mount Retry] Waiting before next attempt (waited \(Int(timeSinceLastAttempt))s / need \(Int(waitTime))s)")
-                return
-            }
-        }
-        
-        lastDDIMountAttempt = Date()
-        ddiMountRetryCount += 1
-        
-        print("[DDI Mount Retry] Attempt #\(ddiMountRetryCount)")
-        
-        // Don't show error alerts for automatic retry attempts
-        attemptAutoMountDDI(showErrorAlert: false)
-    }
-    
-    /// Check if we should retry DDI mount
-    private func checkAndRetryDDIMount() {
-        // Only retry up to 5 times
-        guard ddiMountRetryCount < 5 else {
-            // At max retries - log once and wait for external trigger (network change, manual retry, etc.)
-            if ddiMountRetryCount == 5 {
-                print("[DDI Mount Retry] Reached max attempts (5/5). Waiting for manual retry or network change.")
-            }
-            return
-        }
-        
-        attemptAutoMountDDIWithRetry()
-    }
-
     private func respringNow() throws {
         try RespringHelper.respring()
     }

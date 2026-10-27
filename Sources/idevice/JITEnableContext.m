@@ -17,24 +17,24 @@
 
 #include "JITEnableContext.h"
 //#import "StikDebug-Swift.h"
+#include <os/lock.h>
+#import <pthread.h>
 
-JITEnableContext* sharedJITContext = nil;
+static JITEnableContext* sharedJITContext = nil;
 
 @implementation JITEnableContext {
-    bool heartbeatRunning;
-    IdeviceProviderHandle* provider;
-    dispatch_queue_t syslogQueue;
-    BOOL syslogStreaming;
-    SyslogRelayClientHandle *syslogClient;
-    SyslogLineHandler syslogLineHandler;
-    SyslogErrorHandler syslogErrorHandler;
-    dispatch_queue_t processInspectorQueue;
+    int heartbeatToken;
+    NSError* lastHeartbeatError;
+    os_unfair_lock heartbeatLock;
+    BOOL heartbeatRunning;
+    dispatch_semaphore_t heartbeatSemaphore;
 }
 
 + (instancetype)shared {
-    if (!sharedJITContext) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         sharedJITContext = [[JITEnableContext alloc] init];
-    }
+    });
     return sharedJITContext;
 }
 
@@ -48,6 +48,13 @@ JITEnableContext* sharedJITContext = nil;
     syslogClient = NULL;
     dispatch_queue_attr_t qosAttr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
     processInspectorQueue = dispatch_queue_create("com.stikdebug.processInspector", qosAttr);
+
+    heartbeatToken = 0;
+    heartbeatLock = OS_UNFAIR_LOCK_INIT;
+    heartbeatRunning = NO;
+    heartbeatSemaphore = NULL;
+    lastHeartbeatError = nil;
+
     return self;
 }
 
@@ -150,47 +157,96 @@ JITEnableContext* sharedJITContext = nil;
     return pairingFile;
 }
 
-- (void)startHeartbeatWithCompletionHandler:(HeartbeatCompletionHandler)completionHandler
-                                     logger:(LogFunc)logger
-{
-    NSError* err = nil;
-    IdevicePairingFile* pairingFile = [self getPairingFileWithError:&err];
-    if (err) {
-        // silently swallow “pairing file not found” (-17)
-        if (err.code == -17) {
-            return;
-        }
-        // for all other errors, log and forward
-        if (logger) {
-            logger(err.localizedDescription);
-        }
-        completionHandler(err.code, err.localizedDescription);
-        return;
-    }
-
-    if(heartbeatRunning) {
-        return;
-    }
-    startHeartbeat(
-                   pairingFile,
-                   &provider,
-                   &heartbeatRunning,
-                   ^(int result, const char *message) {
-                       completionHandler(result,
-                                         [NSString stringWithCString:message
-                                                            encoding:NSASCIIStringEncoding]);
-                   },
-                   [self createCLogger:logger]
-                   );
+- (IdeviceProviderHandle*)getTcpProviderHandle {
+    return provider;
 }
 
-- (void)ensureHeartbeat {
-    // wait a bit until heartbeat finish. wait at most 10s
-    int deadline = 50;
-    while((!lastHeartbeatDate || [[NSDate now] timeIntervalSinceDate:lastHeartbeatDate] > 15) && deadline) {
-        --deadline;
-        usleep(200);
+// only block until first heartbeat is completed or failed.
+- (BOOL)startHeartbeat:(NSError**)err {
+    os_unfair_lock_lock(&heartbeatLock);
+    
+    // If heartbeat is already running, wait for it to complete
+    if (heartbeatRunning) {
+        dispatch_semaphore_t waitSemaphore = heartbeatSemaphore;
+        os_unfair_lock_unlock(&heartbeatLock);
+        
+        if (waitSemaphore) {
+            dispatch_semaphore_wait(waitSemaphore, DISPATCH_TIME_FOREVER);
+            dispatch_semaphore_signal(waitSemaphore);
+        }
+        *err = lastHeartbeatError;
+        return *err == nil;
     }
+    
+    // Mark heartbeat as running
+    heartbeatRunning = YES;
+    heartbeatSemaphore = dispatch_semaphore_create(0);
+    dispatch_semaphore_t completionSemaphore = heartbeatSemaphore;
+    os_unfair_lock_unlock(&heartbeatLock);
+    
+    IdevicePairingFile* pairingFile = [self getPairingFileWithError:err];
+    if (*err) {
+        os_unfair_lock_lock(&heartbeatLock);
+        heartbeatRunning = NO;
+        heartbeatSemaphore = NULL;
+        os_unfair_lock_unlock(&heartbeatLock);
+        dispatch_semaphore_signal(completionSemaphore);
+        return NO;
+    }
+
+    globalHeartbeatToken++;
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    __block bool completionCalled = false;
+    HeartbeatCompletionHandlerC Ccompletion = ^(int result, const char *message) {
+        if(completionCalled) {
+            return;
+        }
+        if (result != 0) {
+            *err = [self errorWithStr:[NSString stringWithCString:message
+                                                         encoding:NSASCIIStringEncoding] code:result];
+            self->lastHeartbeatError = *err;
+        } else {
+            self->lastHeartbeatError = nil;
+        }
+        completionCalled = true;
+
+        dispatch_semaphore_signal(semaphore);
+    };
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        startHeartbeat(
+            pairingFile,
+            &self->provider,
+                       globalHeartbeatToken,Ccompletion
+        );
+    });
+    // allow 5 seconds for heartbeat, otherwise we declare timeout
+    intptr_t isTimeout = dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, (uint64_t)(5 * NSEC_PER_SEC)));
+    if(isTimeout) {
+        Ccompletion(-1, "Heartbeat failed to complete in reasonable time.");
+    }
+
+    os_unfair_lock_lock(&heartbeatLock);
+    heartbeatRunning = NO;
+    heartbeatSemaphore = NULL;
+    os_unfair_lock_unlock(&heartbeatLock);
+    dispatch_semaphore_signal(completionSemaphore);
+    
+    return *err == nil;
+}
+
+- (BOOL)ensureHeartbeatWithError:(NSError**)err {
+    // if it's 15s after last heartbeat, we restart heartbeat.
+    if((!lastHeartbeatDate || [[NSDate now] timeIntervalSinceDate:lastHeartbeatDate] > 15)) {
+        return [self startHeartbeat:err];
+    }
+    return YES;
+}
+
+// SparsWilde: kept for the existing call sites (JIT / syslog / process), now backed by StikDebug's ensureHeartbeatWithError.
+- (void)ensureHeartbeat {
+    NSError* heartbeatError = nil;
+    [self ensureHeartbeatWithError:&heartbeatError];
 }
 
 - (BOOL)afcPushFile:(NSString *)sourcePath toPath:(NSString *)destPath error:(NSError **)error {
@@ -965,167 +1021,6 @@ JITEnableContext* sharedJITContext = nil;
         idevice_pairing_file_free(pairingFile);
     }
     return success;
-}
-
-// MARK: - Developer Disk Image Mounting
-
-// Constants for DDI mounting
-static NSString * const kDDIImageTypeKey = @"Developer";
-static NSString * const kDDIPathiOS17Plus = @"/System/Developer/Library";
-static NSString * const kDDIPathLegacy = @"/Developer/Library";
-
-- (BOOL)isDeveloperDiskImageMounted {
-    // Check both paths for compatibility
-    // Note: These directories are only created by iOS when DDI is actually mounted.
-    // They don't exist by default, so directory existence is a reliable indicator.
-    BOOL ios17PathExists = [[NSFileManager defaultManager] fileExistsAtPath:kDDIPathiOS17Plus];
-    BOOL legacyPathExists = [[NSFileManager defaultManager] fileExistsAtPath:kDDIPathLegacy];
-    return ios17PathExists || legacyPathExists;
-}
-
-- (BOOL)mountDeveloperDiskImageWithProgress:(void (^)(NSString *status))progressHandler error:(NSError **)error {
-    if (!provider) {
-        if (error) {
-            *error = [self errorWithStr:@"Provider not initialized. Start heartbeat first." code:-1];
-        }
-        return NO;
-    }
-    
-    // Check if already mounted
-    if ([self isDeveloperDiskImageMounted]) {
-        if (progressHandler) {
-            progressHandler(@"DDI already mounted");
-        }
-        return YES;
-    }
-    
-    if (progressHandler) {
-        progressHandler(@"Connecting to ImageMounter service...");
-    }
-    
-    // Connect to ImageMounter service
-    ImageMounterHandle *imageMounter = NULL;
-    IdeviceFfiError *ffiError = image_mounter_connect(provider, &imageMounter);
-    if (ffiError) {
-        if (error) {
-            NSString *msg = ffiError->message ? [NSString stringWithUTF8String:ffiError->message] : @"Failed to connect to ImageMounter";
-            *error = [self errorWithStr:msg code:ffiError->code];
-        }
-        idevice_error_free(ffiError);
-        return NO;
-    }
-    
-    BOOL success = NO;
-    
-    @try {
-        if (progressHandler) {
-            progressHandler(@"Querying developer mode status...");
-        }
-        
-        // Query developer mode status
-        bool devModeEnabled = false;
-        ffiError = image_mounter_query_developer_mode_status(imageMounter, &devModeEnabled);
-        if (ffiError) {
-            if (error) {
-                NSString *msg = ffiError->message ? [NSString stringWithUTF8String:ffiError->message] : @"Failed to query developer mode status";
-                *error = [self errorWithStr:msg code:ffiError->code];
-            }
-            idevice_error_free(ffiError);
-            return NO;
-        }
-        
-        if (!devModeEnabled) {
-            if (progressHandler) {
-                progressHandler(@"Developer mode is not enabled on device");
-            }
-            if (error) {
-                *error = [self errorWithStr:@"Developer mode must be enabled on the device. Go to Settings > Privacy & Security > Developer Mode and enable it." code:-2];
-            }
-            return NO;
-        }
-        
-        if (progressHandler) {
-            progressHandler(@"Developer mode enabled, attempting to mount DDI...");
-        }
-        
-        // Try to mount developer disk image
-        // Note: This requires the device to be in developer mode (iOS 16+)
-        // For older devices, a personalized DDI may be required
-        //
-        // NULL image and signature parameters: Modern iOS with Developer Mode enabled (iOS 16+)
-        // does not require actual DDI image files or signatures. The device uses built-in
-        // developer disk images when Developer Mode is enabled.
-        // For older iOS versions that require personalized DDI, non-NULL image and signature
-        // data would be needed.
-        ffiError = image_mounter_mount_developer(imageMounter, NULL, 0, NULL, 0);
-        if (ffiError) {
-            // If mounting fails, it might already be mounted or require personalization
-            NSString *msg = ffiError->message ? [NSString stringWithUTF8String:ffiError->message] : @"Failed to mount developer disk image";
-            NSLog(@"[DDI Mount] Warning: %@", msg);
-            
-            // Check if it's actually mounted now (sometimes the error is misleading)
-            if ([self isDeveloperDiskImageMounted]) {
-                if (progressHandler) {
-                    progressHandler(@"DDI mounted successfully");
-                }
-                success = YES;
-            } else {
-                if (error) {
-                    *error = [self errorWithStr:[NSString stringWithFormat:@"%@. The device may require a personalized DDI or additional setup.", msg] code:ffiError->code];
-                }
-                idevice_error_free(ffiError);
-                return NO;
-            }
-        } else {
-            if (progressHandler) {
-                progressHandler(@"DDI mounted successfully");
-            }
-            success = YES;
-        }
-        
-        // Verify mount
-        if (![self isDeveloperDiskImageMounted]) {
-            if (error) {
-                *error = [self errorWithStr:@"DDI mount command succeeded but DDI path not found. Device may need restart." code:-3];
-            }
-            return NO;
-        }
-        
-        return success;
-        
-    } @finally {
-        if (imageMounter) {
-            image_mounter_free(imageMounter);
-        }
-    }
-}
-
-// MARK: - Personalized DDI Mounting (like StikDebug)
-
-- (NSUInteger)getMountedDeviceCount:(NSError**)error {
-    if (!provider) {
-        if (error) {
-            *error = [self errorWithStr:@"Provider not initialized. Start heartbeat first." code:-1];
-        }
-        return 0;
-    }
-    [self ensureHeartbeat];
-    return getMountedDeviceCount(provider, error);
-}
-
-- (NSInteger)mountPersonalDDIWithImagePath:(NSString*)imagePath trustcachePath:(NSString*)trustcachePath manifestPath:(NSString*)manifestPath error:(NSError**)error {
-    if (!provider) {
-        if (error) {
-            *error = [self errorWithStr:@"Provider not initialized. Start heartbeat first." code:-1];
-        }
-        return -1;
-    }
-    [self ensureHeartbeat];
-    IdevicePairingFile* pairing = [self getPairingFileWithError:error];
-    if (!pairing) {
-        return -1;
-    }
-    return mountPersonalDDI(provider, pairing, imagePath, trustcachePath, manifestPath, error);
 }
 
 @end

@@ -16,7 +16,8 @@ struct SettingsView: View {
     @State private var ddiResultMessage: String = ""
     @State private var showDDIResult = false
     @State private var ddiFilesExist = false
-    @State private var isMountingDDI = false
+    @ObservedObject private var mounting = MountingProgress.shared
+    private var isMountingDDI: Bool { mounting.mountingThread != nil }
     var heartbeatRunning: Bool
     var ddiMounted: Bool
 
@@ -150,31 +151,10 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - DDI Helpers
-
-    private static let ddiDownloadItems: [(name: String, relativePath: String, urlString: String)] = [
-        (
-            name: "Build Manifest",
-            relativePath: "DDI/BuildManifest.plist",
-            urlString: "https://github.com/doronz88/DeveloperDiskImage/raw/refs/heads/main/PersonalizedImages/Xcode_iOS_DDI_Personalized/BuildManifest.plist"
-        ),
-        (
-            name: "Image",
-            relativePath: "DDI/Image.dmg",
-            urlString: "https://github.com/doronz88/DeveloperDiskImage/raw/refs/heads/main/PersonalizedImages/Xcode_iOS_DDI_Personalized/Image.dmg"
-        ),
-        (
-            name: "TrustCache",
-            relativePath: "DDI/Image.dmg.trustcache",
-            urlString: "https://github.com/doronz88/DeveloperDiskImage/raw/refs/heads/main/PersonalizedImages/Xcode_iOS_DDI_Personalized/Image.dmg.trustcache"
-        )
-    ]
+    // MARK: - DDI Helpers (StikDebug: redownloadDDI + MountingProgress.pubMount)
 
     private func checkDDIFilesExist() {
-        let fm = FileManager.default
-        ddiFilesExist = Self.ddiDownloadItems.allSatisfy { item in
-            fm.fileExists(atPath: URL.documentsDirectory.appendingPathComponent(item.relativePath).path)
-        }
+        ddiFilesExist = ddiFilesAreDownloaded()
     }
 
     private func downloadDDIFiles() {
@@ -184,49 +164,27 @@ struct SettingsView: View {
 
         Task {
             do {
-                let fm = FileManager.default
-                let totalStages = Double(Self.ddiDownloadItems.count + 1)
-                var completedStages = 0.0
-
-                // Remove existing files
-                for item in Self.ddiDownloadItems {
-                    let fileURL = URL.documentsDirectory.appendingPathComponent(item.relativePath)
-                    if fm.fileExists(atPath: fileURL.path) {
-                        try fm.removeItem(at: fileURL)
+                try await redownloadDDI { progress, status in
+                    Task { @MainActor in
+                        ddiDownloadProgress = progress
+                        ddiStatusMessage = status
                     }
                 }
-                completedStages += 1.0
-                await MainActor.run {
-                    ddiDownloadProgress = completedStages / totalStages
-                }
-
-                // Download each file
-                for item in Self.ddiDownloadItems {
-                    await MainActor.run {
-                        ddiStatusMessage = "\(item.name)…"
-                        ddiDownloadProgress = completedStages / totalStages
-                    }
-                    let destinationURL = URL.documentsDirectory.appendingPathComponent(item.relativePath)
-                    guard let url = URL(string: item.urlString) else { continue }
-                    let (tempLocalUrl, _) = try await URLSession.shared.download(from: url)
-                    try fm.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-                    if fm.fileExists(atPath: destinationURL.path) {
-                        try fm.removeItem(at: destinationURL)
-                    }
-                    try fm.moveItem(at: tempLocalUrl, to: destinationURL)
-                    completedStages += 1.0
-                }
-
                 await MainActor.run {
                     ddiDownloadProgress = 1.0
                     isDDIDownloading = false
                     checkDDIFilesExist()
                     ddiResultMessage = L("ddi_download_complete")
                     showDDIResult = true
+                    // Same as StikDebug: mount right away once files are present
+                    if heartbeatRunning && !MountingProgress.shared.coolisMounted && MountingProgress.shared.mountingThread == nil {
+                        MountingProgress.shared.pubMount()
+                    }
                 }
             } catch {
                 await MainActor.run {
                     isDDIDownloading = false
+                    checkDDIFilesExist()
                     ddiResultMessage = L("ddi_download_failed").replacingOccurrences(of: "{error}", with: error.localizedDescription)
                     showDDIResult = true
                 }
@@ -235,37 +193,8 @@ struct SettingsView: View {
     }
 
     private func mountPersonalizedDDI() {
-        isMountingDDI = true
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let imagePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg").path
-            let trustcachePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg.trustcache").path
-            let manifestPath = URL.documentsDirectory.appendingPathComponent("DDI/BuildManifest.plist").path
-
-            guard let context = JITEnableContext.shared else {
-                DispatchQueue.main.async {
-                    isMountingDDI = false
-                    ddiResultMessage = L("ddi_mount_personal_failed").replacingOccurrences(of: "{error}", with: "Context not initialized")
-                    showDDIResult = true
-                }
-                return
-            }
-
-            do {
-                try context.mountPersonalDDI(withImagePath: imagePath, trustcachePath: trustcachePath, manifestPath: manifestPath)
-                DispatchQueue.main.async {
-                    isMountingDDI = false
-                    ddiResultMessage = L("ddi_mount_personal_success")
-                    showDDIResult = true
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    isMountingDDI = false
-                    ddiResultMessage = L("ddi_mount_personal_failed").replacingOccurrences(of: "{error}", with: error.localizedDescription)
-                    showDDIResult = true
-                }
-            }
-        }
+        guard MountingProgress.shared.mountingThread == nil else { return }
+        MountingProgress.shared.pubMount()
     }
 
     // MARK: - Pairing Section

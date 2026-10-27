@@ -1,8 +1,8 @@
 //
 //  mount.h
-//  SparsWilde
+//  StikDebug
 //
-//  DDI mounting support (adapted from StikDebug)
+//  Created by s s on 2025/12/6.
 //
 
 #ifndef MOUNT_H

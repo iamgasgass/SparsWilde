@@ -8,6 +8,8 @@
 @import UIKit;
 #include "idevice.h"
 #include "jit.h"
+#include "heartbeat.h"
+#include "mount.h"
 
 typedef void (^HeartbeatCompletionHandler)(int result, NSString *message);
 typedef void (^LogFuncC)(const char* message, ...);
@@ -15,10 +17,23 @@ typedef void (^LogFunc)(NSString *message);
 typedef void (^SyslogLineHandler)(NSString *line);
 typedef void (^SyslogErrorHandler)(NSError *error);
 
-@interface JITEnableContext : NSObject
+@interface JITEnableContext : NSObject {
+    // process
+    @protected dispatch_queue_t processInspectorQueue;
+    @protected IdeviceProviderHandle* provider;
+
+    // syslog
+    @protected dispatch_queue_t syslogQueue;
+    @protected BOOL syslogStreaming;
+    @protected SyslogRelayClientHandle *syslogClient;
+    @protected SyslogLineHandler syslogLineHandler;
+    @protected SyslogErrorHandler syslogErrorHandler;
+}
 @property (class, readonly)JITEnableContext* shared;
 - (IdevicePairingFile*)getPairingFileWithError:(NSError**)error;
-- (void)startHeartbeatWithCompletionHandler:(HeartbeatCompletionHandler)completionHandler logger:(LogFunc)logger;
+- (IdeviceProviderHandle*)getTcpProviderHandle;
+- (BOOL)ensureHeartbeatWithError:(NSError**)err;
+- (BOOL)startHeartbeat:(NSError**)err;
 - (BOOL)afcPushFile:(NSString *)sourcePath toPath:(NSString *)destPath error:(NSError **)error;
 - (BOOL)debugAppWithBundleID:(NSString*)bundleID logger:(LogFunc)logger jsCallback:(DebugAppCallback)jsCallback;
 - (BOOL)debugAppWithPID:(int)pid logger:(LogFunc)logger jsCallback:(DebugAppCallback)jsCallback;
@@ -36,8 +51,9 @@ typedef void (^SyslogErrorHandler)(NSError *error);
 - (BOOL)addProfile:(NSData*)profile error:(NSError **)error;
 - (NSArray<NSDictionary*>*)fetchProcessListWithError:(NSError**)error;
 - (BOOL)killProcessWithPID:(int)pid signal:(int)signal error:(NSError **)error;
-- (BOOL)mountDeveloperDiskImageWithProgress:(void (^)(NSString *status))progressHandler error:(NSError **)error;
-- (BOOL)isDeveloperDiskImageMounted;
+@end
+
+@interface JITEnableContext(DDI)
 - (NSUInteger)getMountedDeviceCount:(NSError**)error __attribute__((swift_error(zero_result)));
 - (NSInteger)mountPersonalDDIWithImagePath:(NSString*)imagePath trustcachePath:(NSString*)trustcachePath manifestPath:(NSString*)manifestPath error:(NSError**)error __attribute__((swift_error(nonzero_result)));
 @end
