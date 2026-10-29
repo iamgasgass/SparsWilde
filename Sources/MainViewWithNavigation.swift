@@ -134,7 +134,7 @@ struct ApplyTabView: View {
         if toolStore.themesUIEnabled { list.append((L("tool_themes_ui"), "paintbrush")) }
         if toolStore.zPatchCustomEnabled { list.append((L("tool_zpatch_custom"), "wrench.and.screwdriver")) }
         if featureFlagsStore.featureFlagsEnabled { list.append((L("tool_feature_flags"), "flag")) }
-        if nuggetTweakStore.isEnabled && !nuggetTweakStore.selectedDefinitions().isEmpty { list.append(("Nugget Tweaks", "slider.horizontal.3")) }
+        if nuggetTweakStore.isEnabled && (!nuggetTweakStore.selectedDefinitions().isEmpty || nuggetTweakStore.enableSupervision) { list.append(("Nugget Tweaks", "slider.horizontal.3")) }
         return list
     }
 

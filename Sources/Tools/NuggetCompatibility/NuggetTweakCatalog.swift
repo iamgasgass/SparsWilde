@@ -68,6 +68,8 @@ enum AnyCodableValue: Hashable {
 final class NuggetTweakStore: ObservableObject {
     @AppStorage("NuggetTweakCatalogEnabled") var isEnabled = false
     @AppStorage("NuggetEnabledTweakIDs") private var idsJSON = "[]"
+    @AppStorage("NuggetEnableSupervision") var enableSupervision = false
+    @AppStorage("NuggetSupervisionOrganizationName") var supervisionOrganizationName = "SparsWilde"
     @Published private(set) var enabledIDs: Set<String> = []
 
     init() { load() }

@@ -31,7 +31,8 @@ final class ToolRunner: ObservableObject {
         let hasPasscodeTheme = themeStore.passcodeThemeEnabled
         let hasThemesUI = store.themesUIEnabled
         let hasFeatureFlags = featureFlagsStore.featureFlagsEnabled
-        let hasNuggetTweaks = nuggetTweakStore.isEnabled && !nuggetTweakStore.selectedDefinitions().isEmpty
+        let hasNuggetTweaks = nuggetTweakStore.isEnabled &&
+            (!nuggetTweakStore.selectedDefinitions().isEmpty || nuggetTweakStore.enableSupervision)
         
         if !hasDisableSound && !hasMobileGestalt && !hasZPatchCustom && !hasAppleWallet && !hasPasscodeTheme && !hasThemesUI && !hasFeatureFlags && !hasNuggetTweaks {
             state = .failed(message: "No tools enabled.")
@@ -48,7 +49,9 @@ final class ToolRunner: ObservableObject {
         if hasPasscodeTheme { enabledToolNames.append("Passcode Theme") }
         if hasThemesUI { enabledToolNames.append("Themes UI") }
         if hasFeatureFlags { enabledToolNames.append("Feature Flags") }
-        if hasNuggetTweaks { enabledToolNames.append("Nugget-compatible tweaks") }
+        if hasNuggetTweaks {
+            enabledToolNames.append(nuggetTweakStore.enableSupervision ? "Nugget-compatible tweaks + supervision" : "Nugget-compatible tweaks")
+        }
         
         log("Apply started. Enabled tools: \(enabledToolNames.joined(separator: ", "))")
 
@@ -130,6 +133,9 @@ final class ToolRunner: ObservableObject {
             
             state = .success
             log("Apply completed successfully.")
+            if nuggetTweakStore.enableSupervision && hasNuggetTweaks {
+                log("Supervision payload submitted. Restart the device manually, then open Settings and look for the supervision notice. The system may ignore the payload on unsupported iOS versions.")
+            }
         } catch {
             // Log the failure
             ApplyLogger.shared.log("Apply operation FAILED: \(error.localizedDescription)")
@@ -468,14 +474,57 @@ extension ToolRunner {
     /// Multiple entries for the same target are merged into one plist to avoid overwriting each other.
     private func collectNuggetTweakFiles(store: NuggetTweakStore) throws -> [BookRestoreFile] {
         let selected = store.selectedDefinitions()
-        guard !selected.isEmpty else { return [] }
+        guard !selected.isEmpty || store.enableSupervision else { return [] }
+
         var grouped: [String: [String: Any]] = [:]
         for item in selected {
             if grouped[item.targetPath] == nil { grouped[item.targetPath] = [:] }
             grouped[item.targetPath]?[item.key] = item.value.propertyListValue
         }
+
+        // Cowabunga Lite-style Setup Options: write the configuration-profile
+        // shared-container payload through the existing BookRestore pipeline.
+        // This is opt-in because it replaces CloudConfigurationDetails.plist.
+        if store.enableSupervision {
+            let target = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/CloudConfigurationDetails.plist"
+            let organization = store.supervisionOrganizationName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !organization.isEmpty else {
+                throw ToolTaskError.generic("Enter an organization name before enabling supervision.")
+            }
+            grouped[target] = [
+                "AllowPairing": true,
+                "AutoAdvanceSetup": false,
+                "AwaitDeviceConfigured": false,
+                "ConfigurationSource": 0,
+                "ConfigurationURL": "",
+                "ConfigurationWasApplied": true,
+                "CloudConfigurationUIComplete": true,
+                "PostSetupProfileWasInstalled": true,
+                "IsSupervised": true,
+                "IsMDMUnremovable": false,
+                "IsMandatory": false,
+                "IsMultiUser": false,
+                "OrganizationName": organization,
+                "OrganizationMagic": UUID().uuidString,
+                "OrganizationAddress": "N/A",
+                "OrganizationAddressLine1": "N/A",
+                "OrganizationAddressLine2": "N/A",
+                "OrganizationCity": "N/A",
+                "OrganizationCountry": "N/A",
+                "OrganizationDepartment": "N/A",
+                "OrganizationEmail": "noreply@localhost.localdomain",
+                "OrganizationPhone": "N/A",
+                "OrganizationSupportPhone": "N/A",
+                "OrganizationZipCode": "N/A",
+                "SkipSetup": [String](),
+                "SupervisorHostCertificates": [Data]()
+            ]
+        }
+
         return try grouped.keys.sorted().map { path in
-            guard let dictionary = grouped[path] else { throw ToolTaskError.generic("Unable to build plist for \(path)") }
+            guard let dictionary = grouped[path] else {
+                throw ToolTaskError.generic("Unable to build plist for \\(path)")
+            }
             let data = try PropertyListSerialization.data(fromPropertyList: dictionary, format: .xml, options: 0)
             return .custom(targetPath: path, contents: data)
         }
